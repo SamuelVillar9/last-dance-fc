@@ -118,6 +118,9 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      match_comments_page: { Args: { p_match_key?: string|null; p_player_id?: string|null; p_target_id?: string|null; p_offset?: number }; Returns: Json }
+      save_match_comment: { Args: { p_match_key: string; p_target_id: string; p_body: string }; Returns: string }
+      delete_match_comment: { Args: { p_id: string }; Returns: undefined }
       record_activity: { Args: never; Returns: undefined }
       admin_user_activity: { Args: never; Returns: Json }
       team_portal: { Args: { p_action?: string; p_payload?: Json }; Returns: Json }
