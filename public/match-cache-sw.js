@@ -29,7 +29,9 @@ async function saveSnapshot(data){
    let response;
    if(new URL(url).pathname.startsWith('/_next/static/')){
     for(const old of (await caches.keys()).filter(key=>key.startsWith(PREFIX)&&key!==name).sort().reverse()){
-     response=await(await caches.open(old)).match(url);if(response)break;
+     const previous=await caches.open(old);
+     if(!await previous.match(DOCUMENT))continue;
+     response=await previous.match(url);if(response)break;
     }
    }
    response=response||await fetch(url,{cache:'no-cache',credentials:'omit'});
@@ -79,7 +81,9 @@ self.addEventListener('fetch',event=>{
   event.respondWith((async()=>{
    try{
     for(const name of (await caches.keys()).filter(key=>key.startsWith(PREFIX)).sort().reverse()){
-     const response=await(await caches.open(name)).match(request);if(response)return response;
+     const cache=await caches.open(name);
+     if(!await cache.match(DOCUMENT))continue;
+     const response=await cache.match(request);if(response)return response;
     }
    }catch{/* A storage failure must not block static resources from the network. */}
    return fetch(request);

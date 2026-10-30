@@ -25,14 +25,27 @@
   values.forEach((value,index)=>{const span=document.createElement('span'),b=document.createElement('b'),small=document.createElement('small');b.textContent=String(value).padStart(2,'0');small.textContent=['DÍAS','HORAS','MIN','SEG'][index];span.append(b,small);units.append(span)});element.append(units);
  }
  tick();setInterval(tick,1000);document.addEventListener('visibilitychange',tick);
- let busy=false,lastAttempt=0;
+ // Retry only while recovering a saved document; stop after a successful refresh.
+ let busy=false,recovered=false,lastAttempt=-Infinity,failures=0,retryTimer=null;
+ function schedule(delay){
+  if(recovered||retryTimer!==null||document.visibilityState!=='visible'||navigator.onLine===false)return;
+  retryTimer=setTimeout(()=>{retryTimer=null;void restore()},delay);
+ }
  async function restore(){
-  if(busy||document.visibilityState!=='visible'||Date.now()-lastAttempt<15000||navigator.onLine===false)return;
+  if(recovered||busy||document.visibilityState!=='visible'||navigator.onLine===false)return;
+  const remaining=15000-(Date.now()-lastAttempt);
+  if(remaining>0){schedule(remaining);return}
+  if(retryTimer!==null){clearTimeout(retryTimer);retryTimer=null}
   busy=true;lastAttempt=Date.now();const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),5000);
   try{
    const response=await fetch('/',{cache:'no-store',credentials:'omit',signal:controller.signal});
-   if(response.ok&&(await response.text()).includes('data-match-source="valid"'))location.replace('/');
-  }catch{}finally{clearTimeout(timer);busy=false}
+   if(response.ok&&(await response.text()).includes('data-match-source="valid"')){
+    recovered=true;location.replace('/');
+   }
+  }catch{}finally{
+   clearTimeout(timer);busy=false;
+   if(!recovered){failures++;schedule(Math.min(15000*2**Math.min(failures-1,5),300000))}
+  }
  }
  window.addEventListener('online',restore);document.addEventListener('visibilitychange',restore);
  void restore();

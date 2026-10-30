@@ -7,7 +7,8 @@ export function MatchCache({valid,revision}:{valid:boolean;revision:string}){
  const router=useRouter();
  useEffect(()=>{
   if(!('serviceWorker' in navigator))return;
-  let disposed=false,lastAttempt=0,reconnectPending=false;
+  let disposed=false,lastAttempt=-Infinity,reconnectPending=false;
+  let refreshTimer:ReturnType<typeof setTimeout>|null=null;
   async function save(){
    if(!valid||disposed)return;
    try{
@@ -18,7 +19,7 @@ export function MatchCache({valid,revision}:{valid:boolean;revision:string}){
     const page=document.implementation.createHTMLDocument('LAST DANCE FC · Fútbol sala');
     page.documentElement.lang='es';page.documentElement.dataset.theme=document.documentElement.dataset.theme||'system';
     const viewport=document.createElement('meta');viewport.name='viewport';viewport.content='width=device-width,initial-scale=1,viewport-fit=cover';page.head.append(viewport);
-    const assets=['/crest.png','/match-cache-runtime.js?v=1'];
+    const assets=['/crest.png','/match-cache-runtime.js?v=2'];
     document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]').forEach(link=>{if(new URL(link.href).origin===location.origin){page.head.append(link.cloneNode(true));assets.push(link.href)}});
     // Development embeds styles; production always uses the hashed CSS files above.
     if(process.env.NODE_ENV==='development')document.querySelectorAll('style').forEach(style=>page.head.append(style.cloneNode(true)));
@@ -30,7 +31,7 @@ export function MatchCache({valid,revision}:{valid:boolean;revision:string}){
     if(footer)page.body.append(footer.cloneNode(true));if(nav)page.body.append(nav.cloneNode(true));
     page.body.dataset.matchDocument='1';
     page.querySelectorAll('script').forEach(script=>script.remove());
-    const script=document.createElement('script');script.src='/match-cache-runtime.js?v=1';script.defer=true;page.head.append(script);
+    const script=document.createElement('script');script.src='/match-cache-runtime.js?v=2';script.defer=true;page.head.append(script);
     registration.active.postMessage({type:'SAVE_PUBLIC_MATCH',revision,html:'<!doctype html>'+page.documentElement.outerHTML,assets});
    }catch{/* Local persistence must never affect the normal website. */}
   }
@@ -44,13 +45,19 @@ export function MatchCache({valid,revision}:{valid:boolean;revision:string}){
    }
   }).catch(()=>{});
   function refresh(){
-   if(disposed||document.visibilityState!=='visible'||navigator.onLine===false||Date.now()-lastAttempt<15000)return;
+   if(disposed||!reconnectPending||document.visibilityState!=='visible'||navigator.onLine===false)return;
+   const remaining=15000-(Date.now()-lastAttempt);
+   if(remaining>0){
+    if(refreshTimer===null)refreshTimer=setTimeout(()=>{refreshTimer=null;refresh()},remaining);
+    return;
+   }
+   if(refreshTimer!==null){clearTimeout(refreshTimer);refreshTimer=null}
    lastAttempt=Date.now();reconnectPending=false;router.refresh();
   }
   function online(){reconnectPending=true;refresh()}
   function visible(){if(reconnectPending)refresh()}
   window.addEventListener('online',online);document.addEventListener('visibilitychange',visible);
-  return()=>{disposed=true;window.removeEventListener('online',online);document.removeEventListener('visibilitychange',visible)};
+  return()=>{disposed=true;if(refreshTimer!==null)clearTimeout(refreshTimer);window.removeEventListener('online',online);document.removeEventListener('visibilitychange',visible)};
  },[valid,revision,router]);
  return null;
 }
