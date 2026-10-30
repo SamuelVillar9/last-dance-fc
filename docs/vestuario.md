@@ -1,13 +1,25 @@
 # Vestuario y MVP
 Rutas: /equipo (acceso privado) y /mvp (ranking público).
 
-## Alta de jugadores
-1. El jugador entra en /equipo y pulsa Crear mi cuenta con correo y contraseña (12 caracteres o más).
-2. Confirma el correo si se solicita. Si el envío gratuito de Supabase no permite ese destinatario, el administrador puede crear la cuenta en Supabase > Authentication > Users > Add user > Create new user, con correo confirmado y contraseña temporal que se comparte de forma privada.
-3. El administrador inicia sesión en /equipo con su cuenta habitual. En Cuentas de jugadores selecciona la ficha y escribe el correo confirmado.
-4. Pulsa Vincular cuenta. La cuenta no puede vincularse a un jugador que ya tiene otra cuenta; primero hay que desvincularlo.
-5. El jugador ya puede responder y votar. También puedes vincular tu propia cuenta de administrador a tu ficha.
-No se dan permisos de administración a los jugadores.
+## Alta de jugadores: exclusiva del administrador
+No existe formulario de registro público. Los jugadores solo inician sesión con los datos que les entrega el administrador.
+
+1. Entra con tu cuenta de administrador en /equipo.
+2. En Cuentas de jugadores deja seleccionada Crear cuenta de jugador.
+3. Elige su ficha, escribe su correo y una contraseña temporal de 12 a 128 caracteres.
+4. Pulsa Crear y vincular cuenta. No se envían invitaciones ni correos de confirmación.
+5. Entrega esas credenciales por privado al jugador. Puede cambiarlas con Cambiar contraseña después de entrar.
+6. Para tu cuenta de administrador o cualquier cuenta ya creada, usa Vincular cuenta existente.
+
+La función create-player-account comprueba la sesión y el rol de administrador antes de usar Auth Admin. La clave de servidor permanece dentro de Supabase Edge Functions. Si la vinculación falla se intenta anular únicamente la cuenta recién creada; si falla también la anulación, se explica cómo vincular esa cuenta existente sin duplicarla.
+
+## Cerrar el registro en Supabase
+Además de retirar el registro de la interfaz, desactiva Authentication > Sign In / Providers > Allow new users to sign up en el proyecto Supabase. Así se bloquea también el alta directa por API; Auth Admin sigue permitiendo las altas del administrador.
+La configuración local supabase/config.toml también declara enable_signup=false. El proyecto remoto requiere aplicar ese ajuste en el panel de Supabase; no basta con ocultar un botón. El código no declara el registro como cerrado en el proveedor hasta verificar ese ajuste.
+
+## Activación
+Despliega supabase/functions/create-player-account con su autenticación interna: verifica el JWT mediante Auth y comprueba is_admin, sin confiar en metadatos del usuario. La función necesita que la migración team_area esté aplicada previamente. Comprueba esa condición antes de crear cuentas.
+La activación de la migración team_area sigue pendiente de la autorización solicitada al propietario; este cambio de interfaz y función no la aplica.
 
 ## Funcionamiento
 La disponibilidad (Voy / No voy / Duda / Sin responder) ES la convocatoria. Puede cambiar hasta el inicio del partido (hora de Madrid). El administrador puede responder por otros jugadores.
