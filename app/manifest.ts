@@ -1,0 +1,1 @@
+import type{MetadataRoute}from'next';export default function manifest():MetadataRoute.Manifest{return{name:'LAST DANCE FC',short_name:'LAST DANCE',description:'Temporada 2026/27 · Fútbol sala',start_url:'/',display:'standalone',background_color:'#090909',theme_color:'#F72441',lang:'es',icons:[{src:'/crest.png',sizes:'1254x1254',type:'image/png',purpose:'any'}]}}

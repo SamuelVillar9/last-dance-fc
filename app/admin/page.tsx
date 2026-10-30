@@ -1,0 +1,1 @@
+import{Title}from'@/components/ui';import{Admin}from'@/components/admin';export const metadata={title:'Administración',robots:{index:false,follow:false}};export default function Page(){return <><Title eyebrow="ZONA PRIVADA / LAST DANCE FC" title="EL" accent="VESTUARIO." description="Plantilla, actas y datos de la liga."/><Admin/></>}

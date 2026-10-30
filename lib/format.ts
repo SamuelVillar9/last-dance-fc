@@ -1,0 +1,3 @@
+export function dateLabel(date:string|null){if(!date)return 'Fecha pendiente';return new Intl.DateTimeFormat('es-ES',{day:'numeric',month:'short',timeZone:'Europe/Madrid'}).format(new Date(date+'T12:00:00Z'));}
+export function fullDate(date:string|null){if(!date)return 'Fecha pendiente';return new Intl.DateTimeFormat('es-ES',{weekday:'long',day:'numeric',month:'long',timeZone:'Europe/Madrid'}).format(new Date(date+'T12:00:00Z'));}
+export function updateLabel(date:string){if(!date)return 'Pendiente de primera sincronización';return new Intl.DateTimeFormat('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'Europe/Madrid'}).format(new Date(date));}

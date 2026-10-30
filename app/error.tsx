@@ -1,0 +1,1 @@
+'use client';export default function ErrorPage({reset}:{reset:()=>void}){return <div className="not-found"><h1 className="display-heading">PAUSA EN EL JUEGO.</h1><p>No hemos podido cargar esta página. Tus datos no se han borrado.</p><button className="action" onClick={reset}>Volver a intentar</button></div>}

@@ -1,0 +1,1 @@
+import Link from'next/link';export default function NotFound(){return <div className="not-found"><h1 className="display-heading">FUERA DE JUEGO.</h1><p>Esta página no está disponible.</p><Link href="/" className="action">Volver al inicio</Link></div>}
