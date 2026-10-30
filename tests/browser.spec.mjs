@@ -173,3 +173,46 @@ test('match card exports a local PNG in the active theme without writes',async({
  expect(writes).toBe(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+test('saved next match reopens silently without a network and refreshes after reconnection',async({page,context})=>{
+ const {createServer}=await import('node:http');
+ const league={phase:'Fase I',group:'A',updatedAt:'2026-10-30T10:00:00Z',standings:[],fairPlay:[],matches:[{key:'cache-test',round:3,phase:'Fase I',group:'A',home:'LAST DANCE',away:'RIVAL CACHE',date:'2099-11-08',time:'12:30',venue:'Pista de prueba',status:'scheduled',homeScore:null,awayScore:null}]};
+ let failing=false;
+ const server=createServer((request,response)=>{
+  response.setHeader('Content-Type','application/json');
+  if(failing){response.statusCode=503;response.end('{"message":"temporary failure"}');return}
+  response.end(JSON.stringify(request.url.startsWith('/rest/v1/league_snapshots')?[{data:league}]:[]));
+ });
+ await new Promise(resolve=>server.listen(55555,'127.0.0.1',resolve));
+ let restored;
+ async function hasSavedTime(tab,time){return tab.evaluate(async time=>{
+  for(const name of await caches.keys()){
+   if(!name.startsWith('ld-match-v1-'))continue;
+   const cache=await caches.open(name);const response=await cache.match('/__ld_saved_match__');
+   if(response&&(await response.text()).includes(time))return true;
+  }
+  return false;
+ },time)}
+ try{
+  await page.goto('/');await expect(page.locator('[data-match-summary]')).toContainText('12:30');
+  await expect.poll(()=>hasSavedTime(page,'12:30'),{timeout:20000}).toBe(true);
+  // Older Chromium keeps service-worker fetches online under context.setOffline.
+  // Make the data origin unavailable too, so both browser generations test a real failed refresh.
+  failing=true;await context.setOffline(true);await page.close();restored=await context.newPage();await restored.setViewportSize({width:390,height:844});
+  await restored.goto('http://127.0.0.1:3000/');await expect(restored.locator('body')).toHaveAttribute('data-match-document','1');
+  await expect(restored.locator('[data-match-summary]')).toContainText('12:30');
+  await expect(restored.locator('body')).not.toContainText(/sin conexi[oó]n|offline|copia guardada/i);
+  expect(await restored.locator('.header').evaluate(element=>getComputedStyle(element).display)).toBe('flex');
+  await restored.evaluate(()=>document.fonts.ready);expect(await restored.evaluate(()=>document.fonts.check('600 24px Barlow'))).toBe(true);
+  let requests=0;const record=()=>requests++;restored.on('request',record);
+  const counter=await restored.locator('.countdown-units').innerText();await restored.waitForTimeout(1200);
+  expect(await restored.locator('.countdown-units').innerText()).not.toBe(counter);expect(requests).toBe(0);restored.off('request',record);
+  await restored.getByRole('button',{name:/Cambiar tema/}).click();expect(await restored.evaluate(()=>document.documentElement.dataset.theme)).toBe('dark');
+  league.matches[0].time='16:45';league.updatedAt='2026-10-30T11:00:00Z';failing=false;await context.setOffline(false);
+  await expect(restored.locator('[data-match-summary]')).toContainText('16:45',{timeout:20000});
+  await expect.poll(()=>hasSavedTime(restored,'16:45'),{timeout:20000}).toBe(true);
+  failing=true;await restored.reload();await expect(restored.locator('body')).toHaveAttribute('data-match-document','1');await expect(restored.locator('[data-match-summary]')).toContainText('16:45');
+  const savedUrls=await restored.evaluate(async()=>{const urls=[];for(const name of await caches.keys()){const cache=await caches.open(name);for(const request of await cache.keys())urls.push(request.url)}return urls});
+  expect(savedUrls.some(url=>/\/admin|\/equipo|auth|rest\/v1/.test(url))).toBe(false);
+ }finally{if(restored)await restored.close();await context.setOffline(false);server.closeAllConnections();await new Promise(resolve=>server.close(resolve))}
+});
