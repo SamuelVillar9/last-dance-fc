@@ -196,7 +196,9 @@ test('saved next match reopens silently without a network and refreshes after re
  try{
   await page.goto('/');await expect(page.locator('[data-match-summary]')).toContainText('12:30');
   await expect.poll(()=>hasSavedTime(page,'12:30'),{timeout:20000}).toBe(true);
-  await context.setOffline(true);await page.close();restored=await context.newPage();await restored.setViewportSize({width:390,height:844});
+  // Older Chromium keeps service-worker fetches online under context.setOffline.
+  // Make the data origin unavailable too, so both browser generations test a real failed refresh.
+  failing=true;await context.setOffline(true);await page.close();restored=await context.newPage();await restored.setViewportSize({width:390,height:844});
   await restored.goto('http://127.0.0.1:3000/');await expect(restored.locator('body')).toHaveAttribute('data-match-document','1');
   await expect(restored.locator('[data-match-summary]')).toContainText('12:30');
   await expect(restored.locator('body')).not.toContainText(/sin conexi[oó]n|offline|copia guardada/i);
@@ -206,7 +208,7 @@ test('saved next match reopens silently without a network and refreshes after re
   const counter=await restored.locator('.countdown-units').innerText();await restored.waitForTimeout(1200);
   expect(await restored.locator('.countdown-units').innerText()).not.toBe(counter);expect(requests).toBe(0);restored.off('request',record);
   await restored.getByRole('button',{name:/Cambiar tema/}).click();expect(await restored.evaluate(()=>document.documentElement.dataset.theme)).toBe('dark');
-  league.matches[0].time='16:45';league.updatedAt='2026-10-30T11:00:00Z';await context.setOffline(false);
+  league.matches[0].time='16:45';league.updatedAt='2026-10-30T11:00:00Z';failing=false;await context.setOffline(false);
   await expect(restored.locator('[data-match-summary]')).toContainText('16:45',{timeout:20000});
   await expect.poll(()=>hasSavedTime(restored,'16:45'),{timeout:20000}).toBe(true);
   failing=true;await restored.reload();await expect(restored.locator('body')).toHaveAttribute('data-match-document','1');await expect(restored.locator('[data-match-summary]')).toContainText('16:45');
