@@ -14,6 +14,12 @@ export type Database = {
   }
   public: {
     Tables: {
+      team_photo: {
+        Row: {id:boolean;image_path:string|null;caption:string;alt:string;width:number;height:number;updated_at:string}
+        Insert: {id?:boolean;image_path?:string|null;caption?:string;alt?:string;width?:number;height?:number;updated_at?:string}
+        Update: {image_path?:string|null;caption?:string;alt?:string;width?:number;height?:number}
+        Relationships: []
+      }
       admins: {
         Row: {
           user_id: string

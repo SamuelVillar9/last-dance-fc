@@ -328,3 +328,36 @@ test('notification tutorial appears after login, dismissal persists and settings
  await page.getByRole('button',{name:'Ajustes de notificaciones',exact:true}).click();await expect(modal).toBeVisible();await expect(modal.getByRole('button',{name:'Activar en este dispositivo',exact:true})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+test('team portrait is first in roster, stays complete on mobile and opens an accessible enlarged view',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.goto('/plantilla');
+ const photo=page.getByRole('button',{name:'Ampliar foto del equipo',exact:true});await expect(photo).toBeVisible();
+ const img=photo.locator('img');await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth>0)).toBe(true);
+ expect(await page.evaluate(()=>document.querySelector('#contenido').firstElementChild.classList.contains('team-photo'))).toBe(true);
+ expect(await img.evaluate(el=>Math.abs(el.getBoundingClientRect().width/el.getBoundingClientRect().height-el.naturalWidth/el.naturalHeight)<.02)).toBe(true);
+ await photo.click();const modal=page.getByRole('dialog',{name:'Foto del equipo ampliada'});await expect(modal).toBeVisible();await page.keyboard.press('Escape');await expect(modal).not.toBeVisible();await expect(photo).toBeFocused();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('administrator can replace the group portrait without changing individual player photos',async({page})=>{
+ const user={id:'00000000-0000-0000-0000-000000000001',aud:'authenticated',role:'authenticated',email:'admin@test.invalid',app_metadata:{provider:'email'},user_metadata:{},created_at:'2026-01-01T00:00:00Z'};
+ const token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'+Buffer.from(JSON.stringify({sub:user.id,exp:Math.floor(Date.now()/1000)+3600})).toString('base64url')+'.test-signature';
+ let portrait={id:true,image_path:null,caption:'LAST DANCE FC · Temporada 2026/27',alt:'Composición del equipo',width:1536,height:1024,updated_at:'2026-10-30T10:00:00Z'},uploaded=false,changedPlayers=false;
+ await page.route('http://127.0.0.1:55555/**',async route=>{
+  const request=route.request(),url=request.url(),headers={'access-control-allow-origin':'*','access-control-allow-methods':'*','access-control-allow-headers':'*'};
+  if(request.method()==='OPTIONS'){await route.fulfill({status:204,headers});return}let body=[];
+  if(url.includes('/auth/v1/token'))body={access_token:token,refresh_token:'test-refresh',token_type:'bearer',expires_in:3600,user};
+  else if(url.includes('/auth/v1/user'))body=user;
+  else if(url.includes('/rest/v1/admins'))body={user_id:user.id};
+  else if(url.includes('/rest/v1/team_photo')){if(request.method()==='PATCH')portrait={...portrait,...request.postDataJSON(),updated_at:'2026-10-30T11:00:00Z'};body=portrait}
+  else if(url.includes('/storage/v1/object/team-photos/')&&request.method()==='POST'){uploaded=true;expect(request.headers()['content-type']).toContain('multipart/form-data');expect(request.postDataBuffer().toString('latin1')).toMatch(/content-type: image\/webp/i);body={Key:'team-photos/official/test.webp',Id:'00000000-0000-0000-0000-000000000003'}}
+  else if(url.includes('/rest/v1/players')&&request.method()!=='GET')changedPlayers=true;
+  await route.fulfill({headers,json:body});
+ });
+ await page.goto('/admin');await page.getByLabel('Correo electrónico',{exact:true}).fill(user.email);await page.getByLabel('Contraseña',{exact:true}).fill('test-password-123');await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click();
+ await page.getByRole('button',{name:'Foto de equipo',exact:true}).click();
+ await page.getByLabel('Pie de foto',{exact:true}).fill('Nuestra foto de equipo');
+ await page.getByLabel('Foto de grupo',{exact:true}).setInputFiles('public/team-photo-v1.webp');
+ await page.getByRole('button',{name:'Guardar foto de equipo',exact:true}).click();
+ await expect(page.getByText('Foto de equipo guardada. Ya está disponible en Plantilla.',{exact:true})).toBeVisible();expect(uploaded).toBe(true);expect(changedPlayers).toBe(false);expect(portrait.image_path).toMatch(/^official\/[a-f0-9-]+\.webp$/);expect(portrait.caption).toBe('Nuestra foto de equipo');
+});
