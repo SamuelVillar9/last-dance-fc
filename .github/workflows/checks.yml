@@ -49,6 +49,8 @@ jobs:
           psql -v ON_ERROR_STOP=1 -c "create role service_role nologin;"
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030123937_rincon_interactions.sql
           psql -v ON_ERROR_STOP=1 -f tests/rincon.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030135508_team_photo.sql
+          psql -v ON_ERROR_STOP=1 -f tests/team-photo.sql
           psql -v ON_ERROR_STOP=1 -f tests/comments.sql
           psql -v ON_ERROR_STOP=1 -f tests/team.sql
           psql -v ON_ERROR_STOP=1 -f tests/activity.sql
