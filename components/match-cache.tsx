@@ -29,6 +29,7 @@ export function MatchCache({valid,revision}:{valid:boolean;revision:string}){
     const header=document.querySelector('.header'),footer=document.querySelector('.footer'),nav=document.querySelector('.bottom-nav');
     if(header)page.body.append(header.cloneNode(true));page.body.append(main);
     if(footer)page.body.append(footer.cloneNode(true));if(nav)page.body.append(nav.cloneNode(true));
+    page.querySelectorAll('[data-private-ui]').forEach(element=>element.remove());
     page.body.dataset.matchDocument='1';
     page.querySelectorAll('script').forEach(script=>script.remove());
     const script=document.createElement('script');script.src='/match-cache-runtime.js?v=2';script.defer=true;page.head.append(script);
@@ -61,3 +62,4 @@ export function MatchCache({valid,revision}:{valid:boolean;revision:string}){
  },[valid,revision,router]);
  return null;
 }
+

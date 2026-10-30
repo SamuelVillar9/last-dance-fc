@@ -46,6 +46,9 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/team-area.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030091522_user_activity.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030120704_match_comments.sql
+          psql -v ON_ERROR_STOP=1 -c "create role service_role nologin;"
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030123937_rincon_interactions.sql
+          psql -v ON_ERROR_STOP=1 -f tests/rincon.sql
           psql -v ON_ERROR_STOP=1 -f tests/comments.sql
           psql -v ON_ERROR_STOP=1 -f tests/team.sql
           psql -v ON_ERROR_STOP=1 -f tests/activity.sql
@@ -57,3 +60,4 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Browser checks with mocked accounts (no production access)
         run: npx playwright test --config tests/browser.config.mjs
+
