@@ -73,7 +73,7 @@ export function TeamPortal({players,leagues,reports,initialMatch=''}:{players:Pl
  const participants=report?.entries.map(e=>players.find(p=>p.id===e.playerId)).filter((p):p is Player=>!!p)??[];
  const eligible=!!me&&participants.some(p=>p.id===me.id);
  const open=!!ballot&&Date.now()>=Date.parse(ballot.opens_at)&&Date.now()<Date.parse(ballot.closes_at);
- const title=match?match.home+' — '+match.away+' · '+dateLabel(match.date):'Convocatoria';
+ const title=match?match.home+' — '+match.away+' · '+dateLabel(match.date)+'\n🕒 '+(match.time?.trim()||'Hora pendiente')+'\n📍 '+(match.venue?.trim()||'Campo pendiente'):'Convocatoria';
  const activePlayers=players.filter(p=>p.active);
  return <><div className="admin-toolbar"><Link href="/mvp" className="action secondary">Ranking MVP</Link>{portal?.admin&&<Link href="/admin" className="action secondary">Administración y actas</Link>}<button className="action secondary" disabled={busy} onClick={()=>void run(refresh)}>Actualizar</button><button className="action secondary" disabled={busy} onClick={()=>void run(async()=>{const {error}=await client.auth.signOut();if(error)throw error;setPortal(null);setLogged(false)})}>Salir</button><button className="action secondary" disabled={busy} onClick={()=>{setRecovery(true);setMessage('')}}>Cambiar contraseña</button></div>{notice}
  {!portal?<p className="notice">No se pudo cargar tu área privada. Pulsa Actualizar para volver a intentarlo.</p>:portal.pending?<div className="admin-card"><h2>CASI ESTÁS DENTRO.</h2><p>Esta cuenta todavía no tiene una ficha vinculada. Contacta con Samu para que revise tu acceso.</p></div>:<>
