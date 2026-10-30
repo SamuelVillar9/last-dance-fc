@@ -58,3 +58,12 @@ test('unavailable browser storage never blocks the online home or its styles',as
   assert.equal((await response!)!.status,200);
  }
 });
+
+test('asset requests never expose an unfinished snapshot',async()=>{
+ const h=harness();await h.sandbox.saveSnapshot(h.snapshot);
+ const old=await h.sandbox.caches.open([...h.stores.keys()][0]);await old.put('/match-cache-runtime.js?v=2',new Response('committed runtime'));
+ const pending=await h.sandbox.caches.open('ld-match-v1-9999999999999-pending');await pending.put('/match-cache-runtime.js?v=2',new Response('unfinished runtime'));
+ let response:Promise<Response>|undefined;
+ h.handlers.fetch({request:{url:h.origin+'/match-cache-runtime.js?v=2',method:'GET',mode:'cors'},respondWith:(value:Promise<Response>)=>{response=value}});
+ assert.equal(await(await response!)!.text(),'committed runtime');
+});

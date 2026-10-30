@@ -216,3 +216,15 @@ test('saved next match reopens silently without a network and refreshes after re
   expect(savedUrls.some(url=>/\/admin|\/equipo|auth|rest\/v1/.test(url))).toBe(false);
  }finally{if(restored)await restored.close();await context.setOffline(false);server.closeAllConnections();await new Promise(resolve=>server.close(resolve))}
 });
+
+test('two rapid reconnections refresh again after the throttle window without another event',async({page})=>{
+ test.setTimeout(45000);
+ await page.goto('/');await page.evaluate(()=>navigator.serviceWorker.ready.then(()=>true));
+ let refreshes=0;
+ page.on('request',request=>{if(new URL(request.url()).pathname==='/'&&request.headers().rsc==='1')refreshes++});
+ await page.evaluate(()=>window.dispatchEvent(new Event('online')));
+ await expect.poll(()=>refreshes,{timeout:10000}).toBe(1);
+ await page.waitForTimeout(1000);await page.evaluate(()=>window.dispatchEvent(new Event('online')));
+ expect(refreshes).toBe(1);
+ await expect.poll(()=>refreshes,{timeout:20000}).toBe(2);
+});
