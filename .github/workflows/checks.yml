@@ -44,7 +44,9 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610300001_initial.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202610300002_strict_validation.sql
           psql -v ON_ERROR_STOP=1 -f supabase/team-area.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030091522_user_activity.sql
           psql -v ON_ERROR_STOP=1 -f tests/team.sql
+          psql -v ON_ERROR_STOP=1 -f tests/activity.sql
       - name: Production build without production credentials
         run: npm run build
       - name: Install browser test tools only in CI

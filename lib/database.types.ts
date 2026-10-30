@@ -118,6 +118,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      record_activity: { Args: never; Returns: undefined }
+      admin_user_activity: { Args: never; Returns: Json }
       team_portal: { Args: { p_action?: string; p_payload?: Json }; Returns: Json }
       mvp_results: { Args: never; Returns: Json }
       import_league: {

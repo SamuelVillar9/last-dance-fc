@@ -43,3 +43,16 @@ Referencias de los avisos: [ejecución anónima de funciones privilegiadas](http
 ## Comprobación de integración Git
 
 30/10/2026: Vercel reconoce SamuelVillar9/last-dance-fc y su rama main. Esta actualización de documentación comprueba el disparo automático del despliegue por un commit real, sin modificar el comportamiento de la aplicación.
+
+## Usuarios, actividad y cuenta atrás (30/10/2026)
+
+- Nueva pestaña «Usuarios y actividad» dentro de Administración. Incluye todas las cuentas de Auth, con o sin jugador vinculado, rol, correo, último inicio de sesión y última actividad; búsqueda, filtros y resumen de uso hoy y en siete días.
+- La consulta comprueba en PostgreSQL la pertenencia a `public.admins`. Jugadores y visitantes no pueden consultar el listado ni la tabla privada. El registro utiliza exclusivamente la identidad autenticada y la hora del servidor, con un máximo de una escritura cada cinco minutos por cuenta.
+- Un único componente en el layout registra apertura, navegación y uso visible con sesión guardada. No registra IP, historial de páginas ni duración de sesiones. La actividad empieza con esta versión; no se inventan datos anteriores ni presencia «en línea».
+- La tarjeta destacada del próximo partido muestra días, horas, minutos y segundos. Interpreta el horario en Europe/Madrid, contempla horario de verano y se recalcula al recuperar la pestaña. Al llegar el inicio muestra «¡DÍA DE PARTIDO!». Sin fecha/hora o con aplazamiento muestra el aviso correspondiente.
+- La selección conserva el encuentro durante su día, y al día siguiente prioriza próximos partidos fechados para evitar que un resultado pendiente bloquee el calendario.
+- La tabla privada usa RLS sin políticas y sin permisos directos deliberadamente: solo las funciones privadas controladas acceden a ella. El aviso informativo del asesor para `private.user_activity` corresponde a esta denegación por defecto: https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy.
+- La migración está activada en Supabase. Comprobación transaccional en producción: el administrador obtiene las once cuentas, jugador y anónimo reciben rechazo; la escritura de prueba se revierte.
+- Validación local: veinte pruebas unitarias, TypeScript y compilación; pruebas de permisos, limitación de frecuencia y vinculación sobre PostgreSQL aislado mediante PGlite. CI ejecuta además el SQL de integración sobre PostgreSQL 17.
+
+- Navegador Chromium con cuentas simuladas: comprobados el panel y filtros en móvil, el rechazo visual del jugador, el registro con sesión guardada y el cambio de cuenta atrás al mensaje de partido. Revisión visual local de ambas pantallas realizada.
