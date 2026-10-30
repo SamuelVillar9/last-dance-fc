@@ -1,0 +1,8 @@
+project_id = "last-dance-fc"
+
+[auth]
+enable_signup = false
+
+[functions.create-player-account]
+# JWT is checked against Auth in handler.ts before is_admin is evaluated.
+verify_jwt = false

@@ -48,7 +48,7 @@ begin
   if not admin then raise exception 'Solo el administrador puede vincular cuentas'; end if;
   if p_action='link' then
    select id into target from auth.users where lower(email)=lower(trim(p_payload->>'email')) and email_confirmed_at is not null;
-   if target is null then raise exception 'No hay una cuenta con ese correo confirmado. El jugador debe registrarse y confirmar su correo o crearse desde Supabase Auth'; end if;
+   if target is null then raise exception 'No hay una cuenta confirmada con ese correo. Crea la cuenta desde el panel de administrador o desde Supabase Auth antes de vincularla'; end if;
    if not exists(select 1 from public.players where id=p_payload->>'player_id' and active) then raise exception 'Jugador no válido';end if;
    -- A unique identity per player. Never silently replace someone else's link.
    insert into private.team_accounts(user_id,player_id) values(target,p_payload->>'player_id')
