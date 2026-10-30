@@ -147,3 +147,29 @@ test('home countdown updates to the requested match-day message at Madrid kickof
  await expect(page.getByRole('timer')).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
 });
+
+test('match card exports a local PNG in the active theme without writes',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ await page.goto('/');
+ await page.locator('.match-card.featured').first().click();
+ let writes=0;
+ page.on('request',request=>{if(['POST','PUT','PATCH','DELETE'].includes(request.method())&&!request.url().includes('__nextjs'))writes++});
+ for(const theme of ['light','dark']){
+  await page.evaluate(value=>{document.documentElement.dataset.theme=value},theme);
+  await page.getByRole('button',{name:/Generar imagen|Volver a generar/}).click();
+  await expect(page.getByRole('button',{name:'Volver a generar'})).toBeEnabled();
+  const preview=page.locator('.poster-preview img');
+  await expect(preview).toBeVisible();
+  const result=await preview.evaluate(async image=>{
+   const bitmap=await createImageBitmap(await(await fetch(image.src)).blob());
+   const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1350;
+   const ctx=canvas.getContext('2d');ctx.drawImage(bitmap,0,0);
+   return {width:bitmap.width,height:bitmap.height,pixel:Array.from(ctx.getImageData(1070,500,1,1).data)};
+  });
+  expect(result.width).toBe(1080);expect(result.height).toBe(1350);
+  expect(result.pixel.slice(0,3)).toEqual(theme==='light'?[255,255,255]:[9,9,9]);
+  await expect(page.getByRole('link',{name:'Descargar PNG'})).toHaveAttribute('href',/^blob:/);
+ }
+ expect(writes).toBe(0);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
