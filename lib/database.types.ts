@@ -118,6 +118,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      rincon_comments_page: { Args: {p_match_key?:string|null;p_player_id?:string|null;p_target_id?:string|null;p_offset?:number;p_focus_id?:string|null}; Returns:Json }
+      save_rincon_comment: { Args: {p_match_key:string;p_target_id:string;p_body:string;p_mentions?:Json}; Returns:string }
+      react_rincon_comment: { Args: {p_id:string;p_emoji?:string|null}; Returns:undefined }
+      rincon_notices: { Args: {p_action?:string;p_payload?:Json}; Returns:Json }
+      rincon_dispatch: { Args: {p_action:string;p_payload?:Json}; Returns:Json }
       match_comments_page: { Args: { p_match_key?: string|null; p_player_id?: string|null; p_target_id?: string|null; p_offset?: number }; Returns: Json }
       save_match_comment: { Args: { p_match_key: string; p_target_id: string; p_body: string }; Returns: string }
       delete_match_comment: { Args: { p_id: string }; Returns: undefined }
@@ -266,3 +271,4 @@ export const Constants = {
     Enums: {},
   },
 } as const
+

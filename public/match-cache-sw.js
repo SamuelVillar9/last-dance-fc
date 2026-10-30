@@ -90,3 +90,24 @@ self.addEventListener('fetch',event=>{
   })());
  }
 });
+
+
+// Push shares the existing root worker, preserving public-match offline recovery.
+self.addEventListener('push',event=>{
+ let data={};try{data=event.data?.json()??{}}catch{}
+ const path=typeof data.url==='string'&&data.url.startsWith('/')&&!data.url.startsWith('//')?data.url:'/equipo?avisos=1';
+ event.waitUntil(self.registration.showNotification(typeof data.title==='string'?data.title:'LAST DANCE · Te han mencionado',{
+  body:typeof data.body==='string'?data.body:'Tienes un nuevo aviso en El rincón de rajar.',icon:'/crest.png',badge:'/crest.png',
+  tag:typeof data.tag==='string'?data.tag:'rincon',data:{url:path}
+ }));
+});
+self.addEventListener('notificationclick',event=>{
+ event.notification.close();
+ event.waitUntil((async()=>{
+  const target=new URL(event.notification.data?.url||'/equipo?avisos=1',self.location.origin);
+  if(target.origin!==self.location.origin)return;
+  const windows=await self.clients.matchAll({type:'window',includeUncontrolled:true});
+  for(const client of windows){if(new URL(client.url).origin===target.origin&&'navigate' in client){await client.navigate(target.href);await client.focus();return}}
+  await self.clients.openWindow(target.href);
+ })());
+});

@@ -242,6 +242,14 @@ test('El rincón de rajar supports public reading, linked-player edits, profiles
  const user={id:'00000000-0000-0000-0000-000000000002',aud:'authenticated',role:'authenticated',email:'player@test.invalid',app_metadata:{provider:'email'},user_metadata:{},created_at:'2026-01-01T00:00:00Z'};
  const token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'+Buffer.from(JSON.stringify({sub:user.id,exp:Math.floor(Date.now()/1000)+3600})).toString('base64url')+'.test-signature';
  let comments=[{id:'00000000-0000-0000-0000-000000000099',match_key:fixture.key,author_player_id:'player-2',author_name:'Álvaro',author_number:2,target_player_id:'player-1',target_name:'Dani',target_number:1,body:'Partidazo, Dani',created_at:'2026-10-30T10:00:00Z',updated_at:'2026-10-30T10:00:00Z'}];
+ await page.route('**/api/rincon',async route=>{
+  if(route.request().method()==='GET'){await route.fulfill({json:{configured:false,publicKey:null}});return}
+  const args=route.request().postDataJSON();if(args.action!=='save'){await route.fulfill({json:{ok:true}});return}
+  if(failSave){await route.fulfill({status:503,json:{error:'Fallo temporal de prueba'}});return}
+  const target=players.find(p=>p.id===args.target_id),existing=comments.find(c=>c.author_player_id==='player-1'&&c.target_player_id===target.id);
+  if(existing){existing.body=args.body;existing.mentions=args.mentions;existing.updated_at='2026-10-30T11:00:00Z'}else comments.unshift({id:'00000000-0000-0000-0000-000000000100',match_key:args.match_key,author_player_id:'player-1',author_name:'Dani',author_number:1,target_player_id:target.id,target_name:target.name,target_number:target.number,body:args.body,mentions:args.mentions,reactions:[],created_at:'2026-10-30T10:30:00Z',updated_at:'2026-10-30T10:30:00Z'});
+  await route.fulfill({json:{id:existing?.id||'00000000-0000-0000-0000-000000000100'}});
+ });
  await page.route('http://127.0.0.1:55555/**',async route=>{
   const headers={'access-control-allow-origin':'*','access-control-allow-methods':'*','access-control-allow-headers':'*'};
   if(route.request().method()==='OPTIONS'){await route.fulfill({status:204,headers});return}
@@ -250,10 +258,13 @@ test('El rincón de rajar supports public reading, linked-player edits, profiles
   else if(url.includes('/auth/v1/user'))body=user;
   else if(url.includes('/rpc/team_portal'))body={pending:false,admin,playerId:'player-1',availability:[],rounds:[],accounts:[]};
   else if(url.includes('/rpc/mvp_results'))body=[];
-  else if(url.includes('/rpc/match_comments_page')){
+  else if(url.includes('/rpc/rincon_notices'))body={items:[],unread:0,tutorial_dismissed:true,mentions_push:true,device_active:false};
+  else if((url.includes('/rpc/match_comments_page')||url.includes('/rpc/rincon_comments_page'))){
    const args=route.request().postDataJSON();
    const filtered=comments.filter(c=>(!args.p_match_key||c.match_key===args.p_match_key)&&(!args.p_player_id||c.target_player_id===args.p_player_id)&&(!args.p_target_id||c.target_player_id===args.p_target_id));
-   body={items:filtered.slice(args.p_offset,args.p_offset+10).map(c=>({...c,can_edit:logged&&c.author_player_id==='player-1',can_delete:logged&&(admin||c.author_player_id==='player-1')})),has_more:filtered.length>args.p_offset+10,counts:comments.reduce((r,c)=>({...r,[c.target_player_id]:(r[c.target_player_id]||0)+1}),{}),own_comment:logged&&args.p_target_id?comments.find(c=>c.author_player_id==='player-1'&&c.target_player_id===args.p_target_id)||null:null,viewer:{player_id:logged?'player-1':null,admin,can_write:logged&&!!args.p_match_key}};
+   body={can_react:logged,items:filtered.slice(args.p_offset,args.p_offset+10).map(c=>({...c,can_edit:logged&&c.author_player_id==='player-1',can_delete:logged&&(admin||c.author_player_id==='player-1')})),has_more:filtered.length>args.p_offset+10,counts:comments.reduce((r,c)=>({...r,[c.target_player_id]:(r[c.target_player_id]||0)+1}),{}),own_comment:logged&&args.p_target_id?comments.find(c=>c.author_player_id==='player-1'&&c.target_player_id===args.p_target_id)||null:null,viewer:{player_id:logged?'player-1':null,admin,can_write:logged&&!!args.p_match_key}};
+  }else if(url.includes('/rpc/react_rincon_comment')){
+   const args=route.request().postDataJSON(),comment=comments.find(c=>c.id===args.p_id);comment.reactions=args.p_emoji?[{emoji:args.p_emoji,count:1,mine:true,players:[{id:'player-1',name:'Dani',number:1}]}]:[];body=null;
   }else if(url.includes('/rpc/save_match_comment')){
    if(failSave){status=503;body={message:'Fallo temporal de prueba'}}else{
     const args=route.request().postDataJSON();const target=players.find(p=>p.id===args.p_target_id);const existing=comments.find(c=>c.author_player_id==='player-1'&&c.target_player_id===target.id);
@@ -276,8 +287,44 @@ test('El rincón de rajar supports public reading, linked-player edits, profiles
   failSave=false;await page.getByRole('button',{name:'Publicar',exact:true}).click();await expect(page.getByText(text,{exact:true})).toBeVisible();expect(comments.filter(c=>c.author_player_id==='player-1').length).toBe(1);await expect(page.locator('.comment-text img')).toHaveCount(0);
   await page.goto('/plantilla/player-2');await expect(page.getByText(text,{exact:true})).toBeVisible();await page.locator('#rincon').getByRole('link',{name:'Editar',exact:true}).click();await expect(page.getByLabel('Tu comentario sobre Álvaro')).toHaveValue(text);
   await page.getByLabel('Tu comentario sobre Álvaro').fill('Buen partido, editado');await page.getByRole('button',{name:'Guardar cambios',exact:true}).click();await expect(page.getByText('Buen partido, editado',{exact:true})).toBeVisible();
+  await page.locator('#rincon').getByRole('button',{name:'Editar',exact:true}).click();
+  await page.getByLabel('Tu comentario sobre Álvaro').fill('Buen partido @Ál');
+  await page.getByRole('group',{name:'Selecciona un compañero para mencionar'}).getByRole('button',{name:'#2 Álvaro'}).click();
+  await expect(page.getByLabel('Tu comentario sobre Álvaro')).toHaveValue('Buen partido @Álvaro#2 ');
+  await page.getByRole('button',{name:'Guardar cambios',exact:true}).click();
+  await expect(page.locator('.comment-mention')).toHaveText('@Álvaro#2');
+  const ownComment=page.locator('article.match-comment').filter({has:page.locator('.comment-mention')});
+  await ownComment.getByRole('button',{name:'Me parto · 0',exact:true}).click();
+  await expect(ownComment.getByRole('button',{name:'Me parto · 1',exact:true})).toHaveAttribute('aria-pressed','true');
+  await ownComment.getByRole('button',{name:'Me parto · 1',exact:true}).click();
+  await expect(ownComment.getByRole('button',{name:'Me parto · 0',exact:true})).toHaveAttribute('aria-pressed','false');
   page.on('dialog',dialog=>dialog.accept());await page.locator('#rincon').getByRole('button',{name:'Eliminar',exact:true}).click();await expect(page.getByText('Buen partido, editado',{exact:true})).toHaveCount(0);
   admin=true;await page.reload();await page.getByRole('combobox',{name:'Comentarios sobre',exact:true}).selectOption('player-1');await page.getByRole('button',{name:'Eliminar como administrador',exact:true}).click();await expect(page.getByText('Partidazo, Dani',{exact:true})).toHaveCount(0);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  }finally{backend.closeAllConnections();await new Promise(resolve=>backend.close(resolve))}
+});
+
+
+test('notification tutorial appears after login, dismissal persists and settings remain accessible',async({page})=>{
+ let dismissed=false;
+ const user={id:'00000000-0000-0000-0000-000000000002',aud:'authenticated',role:'authenticated',email:'player@test.invalid',app_metadata:{provider:'email'},user_metadata:{},created_at:'2026-01-01T00:00:00Z'};
+ const token='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.'+Buffer.from(JSON.stringify({sub:user.id,exp:Math.floor(Date.now()/1000)+3600})).toString('base64url')+'.fake-test-signature';
+ await page.route('**/api/rincon',route=>route.fulfill({json:{configured:true,publicKey:'test-key'}}));
+ await page.route('http://127.0.0.1:55555/**',async route=>{
+  const headers={'access-control-allow-origin':'*','access-control-allow-methods':'*','access-control-allow-headers':'*'};
+  if(route.request().method()==='OPTIONS'){await route.fulfill({status:204,headers});return}
+  const url=route.request().url();let body=[];
+  if(url.includes('/auth/v1/token'))body={access_token:token,refresh_token:'test-refresh',token_type:'bearer',expires_in:3600,user};
+  else if(url.includes('/auth/v1/user'))body=user;
+  else if(url.includes('/rpc/team_portal'))body={pending:false,admin:false,playerId:'player-1',availability:[],rounds:[],accounts:[]};
+  else if(url.includes('/rpc/rincon_notices')){const args=route.request().postDataJSON();if(args.p_action==='settings')dismissed=!!args.p_payload.tutorial_dismissed;body={items:[],unread:0,tutorial_dismissed:dismissed,mentions_push:true,device_active:false}}
+  await route.fulfill({headers,json:body});
+ });
+ await page.setViewportSize({width:390,height:844});await page.goto('/equipo');
+ await page.getByLabel('Correo electrónico',{exact:true}).fill(user.email);await page.getByLabel('Contraseña',{exact:true}).fill('test-password-123');await page.getByRole('button',{name:'Entrar',exact:true}).click();
+ const modal=page.getByRole('dialog');await expect(modal).toBeVisible();await expect(modal.getByText('QUE NO SE TE ESCAPE EL SALSEO.')).toBeVisible();
+ await modal.getByRole('button',{name:'No mostrar de nuevo',exact:true}).click();await expect(modal).not.toBeVisible();expect(dismissed).toBe(true);
+ await page.reload();await expect(page.getByRole('button',{name:'Ajustes de notificaciones',exact:true})).toBeVisible();await expect(modal).not.toBeVisible();
+ await page.getByRole('button',{name:'Ajustes de notificaciones',exact:true}).click();await expect(modal).toBeVisible();await expect(modal.getByRole('button',{name:'Activar en este dispositivo',exact:true})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
