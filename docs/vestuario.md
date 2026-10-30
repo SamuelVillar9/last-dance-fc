@@ -19,7 +19,7 @@ La configuración local supabase/config.toml también declara enable_signup=fals
 
 ## Activación
 Despliega supabase/functions/create-player-account con su autenticación interna: verifica el JWT mediante Auth y comprueba is_admin, sin confiar en metadatos del usuario. La función necesita que la migración team_area esté aplicada previamente. Comprueba esa condición antes de crear cuentas.
-La activación de la migración team_area sigue pendiente de la autorización solicitada al propietario; este cambio de interfaz y función no la aplica.
+La migración team_area se aplicó en producción el 30 de octubre de 2026, tras la autorización del propietario. Se verificaron el acceso del administrador, las dos votaciones existentes, los permisos y la conservación de jugadores, actas y borradores. La función create-player-account está desplegada. El cierre del registro público en la configuración remota de Auth debe verificarse por separado.
 
 ## Funcionamiento
 La disponibilidad (Voy / No voy / Duda / Sin responder) ES la convocatoria. Puede cambiar hasta el inicio del partido (hora de Madrid). El administrador puede responder por otros jugadores.
