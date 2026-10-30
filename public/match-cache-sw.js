@@ -9,8 +9,10 @@ function assetAllowed(value){
  return url.origin===self.location.origin&&(/^\/_next\/static\/.*\.(?:css|woff2?|ttf|otf)$/.test(url.pathname)||['/crest.png','/match-cache-runtime.js'].includes(url.pathname));
 }
 async function savedDocument(){
- const names=(await caches.keys()).filter(name=>name.startsWith(PREFIX)).sort().reverse();
- for(const name of names){const cache=await caches.open(name);const response=await cache.match(DOCUMENT);if(response)return response}
+ try{
+  const names=(await caches.keys()).filter(name=>name.startsWith(PREFIX)).sort().reverse();
+  for(const name of names){const cache=await caches.open(name);const response=await cache.match(DOCUMENT);if(response)return response}
+ }catch{/* Storage may be unavailable; preserve normal online navigation. */}
  return null;
 }
 async function saveSnapshot(data){
@@ -75,9 +77,11 @@ self.addEventListener('fetch',event=>{
   })());
  }else if(assetAllowed(request.url)){
   event.respondWith((async()=>{
-   for(const name of (await caches.keys()).filter(key=>key.startsWith(PREFIX)).sort().reverse()){
-    const response=await(await caches.open(name)).match(request);if(response)return response;
-   }
+   try{
+    for(const name of (await caches.keys()).filter(key=>key.startsWith(PREFIX)).sort().reverse()){
+     const response=await(await caches.open(name)).match(request);if(response)return response;
+    }
+   }catch{/* A storage failure must not block static resources from the network. */}
    return fetch(request);
   })());
  }
