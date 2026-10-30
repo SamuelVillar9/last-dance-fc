@@ -1,4 +1,12 @@
+import {deflateSync} from 'node:zlib';
 import {test,expect} from '@playwright/test';
+
+function teamPhotoFixture(){
+ const width=1000,height=600,header=Buffer.alloc(13);header.writeUInt32BE(width);header.writeUInt32BE(height,4);header[8]=8;header[9]=2;
+ const raw=Buffer.alloc(height*(1+width*3),180);for(let y=0;y<height;y++)raw[y*(1+width*3)]=0;
+ function chunk(type,data){const label=Buffer.from(type),content=Buffer.concat([label,data]);let crc=0xffffffff;for(const byte of content){crc^=byte;for(let i=0;i<8;i++)crc=(crc>>>1)^((crc&1)?0xedb88320:0)}const head=Buffer.alloc(4),tail=Buffer.alloc(4);head.writeUInt32BE(data.length);tail.writeUInt32BE((crc^0xffffffff)>>>0);return Buffer.concat([head,content,tail])}
+ return Buffer.concat([Buffer.from([137,80,78,71,13,10,26,10]),chunk('IHDR',header),chunk('IDAT',deflateSync(raw)),chunk('IEND',Buffer.alloc(0))]);
+}
 
 test('mobile vestuario only allows login and recovery, with no public registration',async({page})=>{
  await page.setViewportSize({width:375,height:812});
@@ -329,14 +337,29 @@ test('notification tutorial appears after login, dismissal persists and settings
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
 
-test('team portrait is first in roster, stays complete on mobile and opens an accessible enlarged view',async({page})=>{
+test('roster has no team portrait or empty image block before the first upload',async({page})=>{
  await page.setViewportSize({width:390,height:844});await page.goto('/plantilla');
- const photo=page.getByRole('button',{name:'Ampliar foto del equipo',exact:true});await expect(photo).toBeVisible();
- const img=photo.locator('img');await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth>0)).toBe(true);
- expect(await page.evaluate(()=>document.querySelector('#contenido').firstElementChild.classList.contains('team-photo'))).toBe(true);
- expect(await img.evaluate(el=>Math.abs(el.getBoundingClientRect().width/el.getBoundingClientRect().height-el.naturalWidth/el.naturalHeight)<.02)).toBe(true);
- await photo.click();const modal=page.getByRole('dialog',{name:'Foto del equipo ampliada'});await expect(modal).toBeVisible();await page.keyboard.press('Escape');await expect(modal).not.toBeVisible();await expect(photo).toBeFocused();
+ await expect(page.getByRole('button',{name:'Ampliar foto del equipo',exact:true})).toHaveCount(0);
+ await expect(page.locator('.team-photo')).toHaveCount(0);await expect(page.locator('.roster-grid')).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
+test('uploaded team portrait is first in roster, stays complete on mobile and opens an enlarged view',async({page})=>{
+ const {createServer}=await import('node:http');const image=teamPhotoFixture();
+ const backend=createServer((request,response)=>{
+  if(request.url.startsWith('/storage/')){response.setHeader('Content-Type','image/png');response.end(image);return}
+  response.setHeader('Content-Type','application/json');response.end(JSON.stringify(request.url.startsWith('/rest/v1/team_photo')?{id:true,image_path:'official/abc-123.webp',caption:'Nuestro equipo',alt:'Foto de equipo de prueba',width:1000,height:600,updated_at:'2026-10-30T10:00:00Z'}:[]));
+ });
+ await new Promise(resolve=>backend.listen(55555,'127.0.0.1',resolve));
+ try{
+  await page.setViewportSize({width:390,height:844});await page.goto('/plantilla');
+  const photo=page.getByRole('button',{name:'Ampliar foto del equipo',exact:true});await expect(photo).toBeVisible();
+  const img=photo.locator('img');await expect.poll(()=>img.evaluate(el=>el.complete&&el.naturalWidth>0)).toBe(true);
+  expect(await page.evaluate(()=>document.querySelector('#contenido').firstElementChild.classList.contains('team-photo'))).toBe(true);
+  expect(await img.evaluate(el=>Math.abs(el.getBoundingClientRect().width/el.getBoundingClientRect().height-el.naturalWidth/el.naturalHeight)<.02)).toBe(true);
+  await photo.click();const modal=page.getByRole('dialog',{name:'Foto del equipo ampliada'});await expect(modal).toBeVisible();await modal.getByRole('button',{name:'Ver detalle',exact:true}).click();await expect(modal.getByRole('button',{name:'Ver completa',exact:true})).toHaveAttribute('aria-pressed','true');await page.keyboard.press('Escape');await expect(modal).not.toBeVisible();await expect(photo).toBeFocused();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ }finally{backend.closeAllConnections();await new Promise(resolve=>backend.close(resolve))}
 });
 
 test('administrator can replace the group portrait without changing individual player photos',async({page})=>{
@@ -356,8 +379,9 @@ test('administrator can replace the group portrait without changing individual p
  });
  await page.goto('/admin');await page.getByLabel('Correo electrónico',{exact:true}).fill(user.email);await page.getByLabel('Contraseña',{exact:true}).fill('test-password-123');await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click();
  await page.getByRole('button',{name:'Foto de equipo',exact:true}).click();
+ await expect(page.getByText('Todavía no hay foto de equipo. Plantilla se mostrará sin imagen hasta que subas una.',{exact:true})).toBeVisible();await expect(page.getByRole('button',{name:'Guardar foto de equipo',exact:true})).toBeDisabled();
  await page.getByLabel('Pie de foto',{exact:true}).fill('Nuestra foto de equipo');
- await page.getByLabel('Foto de grupo',{exact:true}).setInputFiles('public/team-photo-v1.webp');
+ await page.getByLabel('Foto de grupo',{exact:true}).setInputFiles({name:'team-test.png',mimeType:'image/png',buffer:teamPhotoFixture()});
  await page.getByRole('button',{name:'Guardar foto de equipo',exact:true}).click();
  await expect(page.getByText('Foto de equipo guardada. Ya está disponible en Plantilla.',{exact:true})).toBeVisible();expect(uploaded).toBe(true);expect(changedPlayers).toBe(false);expect(portrait.image_path).toMatch(/^official\/[a-f0-9-]+\.webp$/);expect(portrait.caption).toBe('Nuestra foto de equipo');
 });

@@ -3,9 +3,9 @@ create table public.team_photo(
  id boolean primary key default true check(id),
  image_path text check(image_path is null or image_path ~ '^official/[0-9a-f-]+\.webp$'),
  caption text not null default 'LAST DANCE FC · Temporada 2026/27' check(char_length(btrim(caption)) between 1 and 160),
- alt text not null default 'Composición de diez jugadores de LAST DANCE FC en dos filas sobre una pista de fútbol sala.' check(char_length(btrim(alt)) between 1 and 400),
- width integer not null default 1672 check(width between 800 and 8000),
- height integer not null default 941 check(height between 200 and 8000 and height<width),
+ alt text not null default 'Foto de grupo de LAST DANCE FC en un pabellón de fútbol sala.' check(char_length(btrim(alt)) between 1 and 400),
+ width integer not null default 1600 check(width between 800 and 8000),
+ height integer not null default 900 check(height between 200 and 8000 and height<width),
  updated_at timestamptz not null default now()
 );
 insert into public.team_photo(id) values(true);
