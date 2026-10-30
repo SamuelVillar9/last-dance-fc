@@ -50,3 +50,11 @@ test('worker never intercepts private routes, API requests, RSC requests or writ
   let intercepted=false;h.handlers.fetch({request:{url,method,mode},respondWith:()=>{intercepted=true}});assert.equal(intercepted,false,url);
  }
 });
+
+test('unavailable browser storage never blocks the online home or its styles',async()=>{
+ const h=harness();h.sandbox.caches.keys=async()=>{throw Error('Storage unavailable')};
+ for(const [url,mode] of [[h.origin+'/','navigate'],[h.origin+'/_next/static/css/site.css','cors']]){
+  let response:Promise<Response>|undefined;h.handlers.fetch({request:{url,method:'GET',mode},respondWith:(value:Promise<Response>)=>{response=value}});
+  assert.equal((await response!)!.status,200);
+ }
+});
