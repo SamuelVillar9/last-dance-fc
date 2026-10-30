@@ -34,3 +34,12 @@ El bootstrap es únicamente para una base vacía de pruebas. Nunca debe ejecutar
 ## Despliegue
 supabase/team-area.sql se aplica una sola vez como migración team_area. Solo añade estructuras y funciones; no cambia actas, jugadores ni credenciales existentes. Las tablas nuevas viven en private con RLS y sin permisos directos del cliente. Los RPC públicos usan funciones invoker; las implementaciones privadas verifican identidad y permisos.
 No hay servicios nuevos de pago, tareas programadas ni claves service_role en el navegador.
+
+
+## El rincón de rajar
+
+Los comentarios de actuación son públicos y aparecen debajo del acta del partido y en la ficha de su destinatario. Solo los jugadores con una cuenta vinculada y activa pueden escribir. El partido debe haber finalizado y tener un acta publicada; el destinatario debe figurar en ella. Se permite comentar la propia actuación.
+
+Cada autor puede guardar un comentario de hasta 280 caracteres por destinatario y partido, editarlo o eliminarlo. El administrador puede eliminar cualquier comentario. Se muestran diez comentarios por página, con filtro por jugador en el partido. No hay respuestas, reacciones ni consultas periódicas. Las identidades de Auth se guardan en el esquema privado y nunca se incluyen en la respuesta pública.
+
+La migración `20261030120704_match_comments.sql` debe aplicarse antes de desplegar la interfaz. `tests/comments.sql` comprueba los permisos reales y `tests/browser.spec.mjs` recorre publicación, error de guardado, edición, ficha personal y moderación.
