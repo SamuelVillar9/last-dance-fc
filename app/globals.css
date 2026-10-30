@@ -57,3 +57,5 @@
 .activity-note{margin-top:18px;font-size:13px;line-height:1.6}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:600px){.activity-filters{grid-template-columns:1fr}.activity-summary{gap:6px}.activity-summary>div{padding:12px 8px}.activity-summary span{font-size:9px}.activity-summary strong{font-size:30px}}
+
+.poster-preview{margin-top:24px;display:flex;flex-direction:column;align-items:flex-start;gap:16px}.poster-preview img{width:min(100%,432px);height:auto;border:1px solid var(--line)}.match-poster{margin:24px 0}
