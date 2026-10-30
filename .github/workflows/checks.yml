@@ -26,6 +26,8 @@ jobs:
       PGUSER: postgres
       PGPASSWORD: local-test-only
       PGDATABASE: team_test
+      NEXT_PUBLIC_SUPABASE_URL: http://127.0.0.1:55555
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: test-publishable-key
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -45,3 +47,9 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f tests/team.sql
       - name: Production build without production credentials
         run: npm run build
+      - name: Install browser test tools only in CI
+        run: npm install --no-save --package-lock=false @playwright/test@1.56.1
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Browser checks with mocked accounts (no production access)
+        run: npx playwright test --config tests/browser.config.mjs
