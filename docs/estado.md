@@ -2,12 +2,12 @@
 
 - Páginas públicas, diseño Pulso y componentes responsive construidos.
 - Primera carga real de calendario, clasificación y juego limpio. Estadísticas individuales vacías hasta publicar actas propias.
-- Migraciones y políticas aplicadas a un proyecto Supabase dedicado. Cuenta administradora pendiente de activación por el propietario; no se ha inventado su correo o contraseña.
+- Migraciones y políticas aplicadas a un proyecto Supabase dedicado. Cuenta del propietario confirmada y habilitada como administradora; las credenciales no se almacenan en el repositorio.
 - Importación de fuentes de Fase I implementada. Enlaces y grupos de Fase II pendientes de publicación por la organización.
 - Panel: login, recuperación (requiere SMTP), actas, borradores y publicación, jugadores, bajas y foto comprimida.
 - Pruebas automáticas de importación, validación y totales; TypeScript y compilación de producción.
 - Revisión visual local bloqueada por la política del navegador de este entorno; no se afirma verificación en móvil real.
-- Activación de la cuenta real, envío de recuperación y recorrido autenticado completo pendientes de intervención del propietario y comprobación posterior.
+- Cuenta real activada. El envío de recuperación y el recorrido autenticado completo siguen pendientes de comprobación.
 
 ## Ajuste al iniciar desarrollo
 
@@ -25,7 +25,7 @@ Se importa juego limpio por equipos (puntos, amarillas y rojas). Solo se registr
 - Publicado en https://lastdancefc.vercel.app mediante despliegue directo.
 - Páginas públicas, ficha de jugador, panel y manifiesto respondieron HTTP 200; la ruta de importación sin credencial respondió 401.
 - Prueba transaccional de validación: goles nulos rechazados; borrador válido no crea una versión pública; transacción revertida sin datos de prueba persistentes.
-- GitHub sigue pendiente del permiso de escritura y Vercel de su enlace Git para automatizar despliegues.
+- Permiso de escritura de GitHub resuelto y código publicado en main. Vercel ya puede acceder al repositorio; la conexión automática se comprueba con este commit.
 
 ## Avisos de la revisión de Supabase
 
@@ -39,3 +39,7 @@ Referencias de los avisos: [ejecución anónima de funciones privilegiadas](http
 
 - Cuenta del propietario confirmada en Supabase y añadida a admins. No se almacena el correo ni contraseña en este repositorio.
 - Permiso de escritura de GitHub validado mediante el conector tras actualizar su instalación.
+
+## Comprobación de integración Git
+
+30/10/2026: Vercel reconoce SamuelVillar9/last-dance-fc y su rama main. Esta actualización de documentación comprueba el disparo automático del despliegue por un commit real, sin modificar el comportamiento de la aplicación.
