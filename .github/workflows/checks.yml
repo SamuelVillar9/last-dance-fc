@@ -54,13 +54,13 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611070003_live_permissions_push.sql
           psql -v ON_ERROR_STOP=1 -f tests/live.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611070004_admin_live_simulations.sql
-          psql -v ON_ERROR_STOP=1 -f tests/live-simulations.sql
           psql -v ON_ERROR_STOP=1 -f tests/rincon.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030135508_team_photo.sql
           psql -v ON_ERROR_STOP=1 -f tests/team-photo.sql
           psql -v ON_ERROR_STOP=1 -f tests/comments.sql
           psql -v ON_ERROR_STOP=1 -f tests/team.sql
           psql -v ON_ERROR_STOP=1 -f tests/activity.sql
+          psql -v ON_ERROR_STOP=1 -f tests/live-simulations.sql
       - name: Production build without production credentials
         run: npm run build
       - name: Install browser test tools only in CI
