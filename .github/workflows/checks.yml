@@ -48,6 +48,10 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030120704_match_comments.sql
           psql -v ON_ERROR_STOP=1 -c "create role service_role nologin;"
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030123937_rincon_interactions.sql
+          psql -v ON_ERROR_STOP=1 -c "create function auth.jwt() returns jsonb language sql stable as \$\$ select jsonb_build_object('role',current_setting('request.jwt.claim.role',true)) \$\$;"
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611070001_live_match_foundation.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611070002_live_match_controls.sql
+          psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611070003_live_permissions_push.sql
           psql -v ON_ERROR_STOP=1 -f tests/rincon.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030135508_team_photo.sql
           psql -v ON_ERROR_STOP=1 -f tests/team-photo.sql
