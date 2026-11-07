@@ -14,7 +14,7 @@ function installed(){return matchMedia('(display-mode: standalone)').matches||!!
 function needsInstall(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1}
 export function RinconNotifications(){
  const db=browserDb(),dialog=useRef<HTMLDialogElement>(null);
- const [uid,setUid]=useState<string|null>(null),[data,setData]=useState<Notices|null>(null),[panel,setPanel]=useState<'tutorial'|'settings'|'notices'|null>(null);
+ const [livePush,setLivePush]=useState(true);const [uid,setUid]=useState<string|null>(null),[data,setData]=useState<Notices|null>(null),[panel,setPanel]=useState<'tutorial'|'settings'|'notices'|null>(null);
  const [endpoint,setEndpoint]=useState(''),[publicKey,setPublicKey]=useState(''),[configured,setConfigured]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[supported,setSupported]=useState(false),[permission,setPermission]=useState('default'),[installFirst,setInstallFirst]=useState(false);
  const account=useRef(uid);account.current=uid;
  useEffect(()=>{
@@ -35,6 +35,7 @@ export function RinconNotifications(){
   const {data,error}=await db.rpc('rincon_notices',{p_payload:{endpoint}});
   if(account.current!==owner||error||!data||typeof data!=='object'||!('items' in data)||!Array.isArray(data.items))return;
   setData(data as unknown as Notices);
+  void db.rpc('live_my_permissions').then(({data:pref})=>{if(account.current===owner&&pref&&typeof pref==='object'&&'live_push' in pref)setLivePush(!!pref.live_push)});
  },[db,uid,endpoint]);
  useEffect(()=>{
   if(!uid){setData(null);setPanel(null);return}void refresh();
@@ -96,7 +97,7 @@ export function RinconNotifications(){
   <div className="team-actions"><button type="button" className="action" disabled={busy||!supported||installFirst||!configured||permission==='denied'||active} onClick={()=>void enable()}>Activar en este dispositivo</button>
   {active&&<><button type="button" className="action secondary" disabled={busy} onClick={()=>void run(async()=>{await post({action:'test',endpoint});setMessage('Prueba aceptada por el servicio push. Comprueba el centro de notificaciones. Si no aparece, revisa los ajustes del dispositivo.')})}>Enviar prueba</button><button type="button" className="action secondary" disabled={busy} onClick={()=>void run(async()=>{await action('unsubscribe',{endpoint});setMessage('Avisos desactivados en este dispositivo.')})}>Desactivar este dispositivo</button></>}</div>
   <label className="push-preference"><input type="checkbox" checked={data.mentions_push} disabled={busy} onChange={event=>void run(()=>action('settings',{mentions_push:event.target.checked}))}/> Recibir push de menciones en mis dispositivos activados</label>
-  <p className="muted">Por ahora solo avisamos de menciones. Las reacciones no envían push. Puedes cambiarlo en Vestuario → Ajustes de notificaciones.</p>
+  <label className="push-preference"><input type="checkbox" checked={livePush} disabled={busy} onChange={event=>void run(async()=>{if(!db)throw Error('Inicia sesión');const {error}=await db.rpc('live_push_preference',{p_enabled:event.target.checked});if(error)throw error;setLivePush(event.target.checked)})}/> Recibir avisos de los acontecimientos del partido en directo (aunque no esté convocado)</label><p className="muted">Los avisos del directo requieren tener activadas las notificaciones en este dispositivo. Puedes desactivarlos sin dejar de recibir menciones.</p>
   {panel==='tutorial'&&<div className="team-actions"><button type="button" className="action secondary" disabled={busy} onClick={later}>Ahora no</button><button type="button" className="action secondary" disabled={busy} onClick={()=>void run(async()=>{await action('settings',{tutorial_dismissed:true});later()})}>No mostrar de nuevo</button></div>}
  </>}
  {message&&<p role="status" className="admin-message">{message}</p>}
