@@ -1,23 +1,30 @@
-# Partido en directo — checklist de integración
+# Partido en directo — entrega 2026/27
 
-## Implementado en esta rama
-- Sesión de partido, marcador provisional y estados.
-- Permisos globales de anotación y control asignados por administración.
-- Eventos de gol, tarjeta amarilla, roja y segunda amarilla, con asistencia opcional.
-- Cronología, anulación con auditoría e idempotencia por solicitud.
-- Cola de avisos a suscripciones de jugadores activos sin filtro de convocatoria.
-- Interfaz móvil dentro de la ficha del partido.
+## Funcionalidad implementada
+- Marcador provisional, reloj y estados de primera parte, descanso, segunda parte y final.
+- Eventos de goles, asistencias, tarjetas amarillas, rojas y segundas amarillas.
+- Anulación auditable de acontecimientos, sin alterar actas oficiales.
+- Permisos de anotación y control asignados desde administración.
+- Cronología pública actualizada por consulta periódica de 5 segundos.
+- Notificaciones web push para eventos y cambios de estado a integrantes activos con suscripción, independientemente de su convocatoria.
+- Preferencia independiente para desactivar push del directo.
+- Cola persistente con reintentos mediante la tarea diaria existente y disparo tras eventos.
+- Importación de eventos a un borrador de acta revisable por el administrador.
+- Migraciones SQL aplicadas al proyecto Supabase de Last Dance FC.
 
-## Bloqueos antes de producción
-1. Ejecutar migraciones 001, 002 y 003 sobre una base de pruebas y validar el SQL y sus políticas.
-2. Probar acceso anónimo, jugador sin permiso, anotador y administrador.
-3. Verificar orden y simultaneidad de goles y anulaciones con dos dispositivos.
-4. Integrar preferencias de avisos de partido en la pantalla existente de notificaciones.
-5. Añadir push para cambios de estado (inicio, descanso, segunda parte, final); actualmente solo los eventos de juego tienen outbox.
-6. Añadir reintento independiente del navegador para entregas pendientes; la ruta actual solo dispara un envío tras registrar.
-7. Implementar conciliación explícita de los eventos con el acta y resultado oficiales, sin duplicar estadísticas.
-8. Probar compilación, TypeScript, test suite y ejecución real en Vercel Preview.
-9. Revisar la migración de Supabase antes de aplicarla en producción.
-10. Fusionar únicamente después de completar las verificaciones.
+## Alcance y límites operativos
+- El directo es **provisional**. El resultado y las estadísticas oficiales se publican mediante el acta habitual.
+- Los destinatarios necesitan una suscripción push activa y permisos del navegador. En iOS puede ser necesaria la PWA instalada.
+- Los avisos se envían a todos los integrantes activos **suscritos** con la preferencia habilitada, estén convocados o no. No se pueden enviar a dispositivos sin consentimiento o suscripción.
+- Los reintentos automáticos siguen la tarea diaria existente; no garantizan entrega inmediata si falla el disparo del evento.
+- La actualización del marcador utiliza polling de cinco segundos, no canales Supabase Realtime.
+- Los permisos de anotación son globales para los partidos del equipo.
+- La importación al acta exige revisión manual antes de publicarla.
 
-**No desplegar ni fusionar esta rama todavía.**
+## Comprobación previa a la fusión
+1. GitHub Actions: pruebas unitarias, tipos, migraciones aisladas, compilación y navegador.
+2. Vercel Preview: despliegue READY del último commit.
+3. Revisión de seguridad y comprobación de datos en Supabase.
+4. Prueba funcional con cuentas de administrador y jugador suscrito.
+
+No confundir la existencia de las funciones con la verificación de entrega real de notificaciones.
