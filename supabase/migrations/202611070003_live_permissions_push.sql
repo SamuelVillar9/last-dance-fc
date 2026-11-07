@@ -1,6 +1,6 @@
 begin;
 create function public.live_my_permissions() returns jsonb language sql stable security definer set search_path='' as $$
- select jsonb_build_object('can_record',public.is_admin() or coalesce((select p.can_record from public.live_permissions p where p.user_id=auth.uid()),false),'can_control',public.is_admin() or coalesce((select p.can_control from public.live_permissions p where p.user_id=auth.uid()),false));
+ select jsonb_build_object('can_record',public.is_admin() or coalesce((select p.can_record from public.live_permissions p where p.user_id=auth.uid()),false),'can_control',public.is_admin() or coalesce((select p.can_control from public.live_permissions p where p.user_id=auth.uid()),false),'live_push',coalesce((select n.live_push from private.notification_settings n where n.user_id=auth.uid()),true));
 $$;
 revoke all on function public.live_my_permissions() from public,anon;
 grant execute on function public.live_my_permissions() to authenticated;
