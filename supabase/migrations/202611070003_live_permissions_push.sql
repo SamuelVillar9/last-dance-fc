@@ -1,4 +1,5 @@
 begin;
+alter table private.notification_settings add column if not exists live_push boolean not null default true;
 create function public.live_my_permissions() returns jsonb language sql stable security definer set search_path='' as $$
  select jsonb_build_object('can_record',public.is_admin() or coalesce((select p.can_record from public.live_permissions p where p.user_id=auth.uid()),false),'can_control',public.is_admin() or coalesce((select p.can_control from public.live_permissions p where p.user_id=auth.uid()),false),'live_push',coalesce((select n.live_push from private.notification_settings n where n.user_id=auth.uid()),true));
 $$;
@@ -15,7 +16,6 @@ end;$$;
 revoke all on function public.live_admin_permissions() from public,anon;
 grant execute on function public.live_admin_permissions() to authenticated;
 -- Only active team members receive match push. Opt-out applies independently of mentions.
-alter table private.notification_settings add column if not exists live_push boolean not null default true;
 create function public.live_push_preference(p_enabled boolean) returns void language plpgsql security definer set search_path='' as $$
 begin
  if auth.uid() is null or not exists(select 1 from private.team_accounts a join public.players p on p.id=a.player_id and p.active where a.user_id=auth.uid()) then raise exception 'No eres integrante activo';end if;
