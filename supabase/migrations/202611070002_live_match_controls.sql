@@ -18,6 +18,8 @@ begin
  elsif p_action='finish' and v.status in ('first_half','halftime','second_half') then
  update public.live_matches set status='finished',elapsed_seconds=least(7200,elapsed_seconds+case when period_started_at is null then 0 else greatest(0,extract(epoch from now()-period_started_at)::int) end),period_started_at=null,finished_at=now(),revision=revision+1,updated_at=now() where match_key=p_match;
  else raise exception 'Transición de estado no permitida';end if;
+ insert into public.live_events(match_key,client_request_id,kind,side,minute,period,actor_id)
+ values(p_match,gen_random_uuid(),case when p_action='start' then 'kickoff' when p_action='finish' then 'final' else p_action end,'home',least(120,greatest(0,v.elapsed_seconds/60)),case when p_action in ('start','halftime') then 1 else 2 end,auth.uid());
  select * into v from public.live_matches where match_key=p_match;
  return v;
 end;$$;
