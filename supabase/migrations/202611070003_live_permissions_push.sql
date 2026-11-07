@@ -43,7 +43,7 @@ create function public.live_dispatch(p_action text,p_payload jsonb default '{}':
 language plpgsql security definer set search_path='' as $$
 declare result jsonb;
 begin
- if auth.role()<>'service_role' then raise exception 'Acceso denegado';end if;
+ if current_user<>'service_role' then raise exception 'Acceso denegado';end if;
  if p_action='claim' then
  with claimed as (
  select o.id from private.live_push_outbox o where not o.finished and o.available_at<=now() and o.attempts<5 order by o.available_at for update skip locked limit 50
