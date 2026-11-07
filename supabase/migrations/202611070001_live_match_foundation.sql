@@ -24,7 +24,7 @@ create table public.live_events (
  id uuid primary key default gen_random_uuid(),
  match_key text not null references public.live_matches(match_key) on delete cascade,
  client_request_id uuid not null,
- kind text not null check(kind in ('goal','yellow','red','second_yellow')),
+ kind text not null check(kind in ('goal','yellow','red','second_yellow','kickoff','halftime','resume','final')),
  side text not null check(side in ('home','away')),
  player_id text references public.players(id),
  assist_player_id text references public.players(id),
