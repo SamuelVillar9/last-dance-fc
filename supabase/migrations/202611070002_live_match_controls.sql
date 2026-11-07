@@ -32,7 +32,7 @@ declare e public.live_events;v_uid uuid:=auth.uid();
 begin
  if v_uid is null or not private.live_can_record() then raise exception 'Acceso denegado';end if;
  select * into e from public.live_events where id=p_event for update;
- if not found or e.voided_at is not null then raise exception 'Evento no disponible';end if;
+ if not found or e.voided_at is not null or e.kind not in ('goal','yellow','red','second_yellow') then raise exception 'Evento no disponible';end if;
  if e.actor_id<>v_uid and not public.is_admin() then raise exception 'Solo puedes corregir tus eventos';end if;
  perform 1 from public.live_matches where match_key=e.match_key and status in ('first_half','halftime','second_half') for update;
  if not found then raise exception 'Partido cerrado';end if;
