@@ -1,3 +1,4 @@
+import {timingSafeEqual} from 'node:crypto';
 import {createClient} from '@supabase/supabase-js';
 import {after} from 'next/server';
 import {dispatchLive} from '@/lib/live-push-dispatch';
@@ -14,4 +15,11 @@ export async function POST(request:Request){
  // No payload or user-selected recipient is trusted: worker claims its own secured outbox.
  after(async()=>{try{await dispatchLive()}catch{console.error('live_push_dispatch_failed')}});
  return Response.json({queued:true});
+}
+
+export async function GET(request:Request){
+ const expected=process.env.CRON_SECRET?'Bearer '+process.env.CRON_SECRET:'';
+ const actual=request.headers.get('authorization')??'';
+ if(!expected||expected.length!==actual.length||!timingSafeEqual(Buffer.from(actual),Buffer.from(expected)))return Response.json({error:'No autorizado'},{status:401});
+ try{await dispatchLive();return Response.json({ok:true})}catch{return Response.json({error:'No se pudo procesar la cola'},{status:503})}
 }
