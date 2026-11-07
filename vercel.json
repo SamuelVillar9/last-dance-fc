@@ -3,10 +3,6 @@
     {
       "path": "/api/sync",
       "schedule": "0 6 * * *"
-    },
-    {
-      "path": "/api/live",
-      "schedule": "0 * * * *"
     }
   ],
   "regions": [
