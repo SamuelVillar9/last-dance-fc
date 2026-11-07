@@ -14,6 +14,8 @@ export type Database = {
   }
   public: {
     Tables: {
+      live_matches: {Row:{match_key:string;status:string;period_started_at:string|null;elapsed_seconds:number;home_goals:number;away_goals:number;revision:number;started_at:string|null;finished_at:string|null;updated_at:string};Insert:{match_key:string;status?:string;period_started_at?:string|null;elapsed_seconds?:number;home_goals?:number;away_goals?:number;revision?:number;started_at?:string|null;finished_at?:string|null;updated_at?:string};Update:{status?:string;period_started_at?:string|null;elapsed_seconds?:number;home_goals?:number;away_goals?:number;revision?:number;started_at?:string|null;finished_at?:string|null;updated_at?:string};Relationships:[]}
+      live_events: {Row:{id:string;match_key:string;client_request_id:string;kind:string;side:string;player_id:string|null;assist_player_id:string|null;minute:number;period:number;actor_id:string;voided_at:string|null;created_at:string};Insert:{match_key:string;client_request_id:string;kind:string;side:string;player_id?:string|null;assist_player_id?:string|null;minute:number;period:number;actor_id:string};Update:{voided_at?:string|null};Relationships:[]}
       team_photo: {
         Row: {id:boolean;image_path:string|null;caption:string;alt:string;width:number;height:number;updated_at:string}
         Insert: {id?:boolean;image_path?:string|null;caption?:string;alt?:string;width?:number;height?:number;updated_at?:string}
@@ -124,6 +126,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      live_my_permissions: {Args:never;Returns:Json}
+      live_admin_permissions: {Args:never;Returns:Json}
+      live_set_permission: {Args:{p_user:string;p_record:boolean;p_control:boolean};Returns:undefined}
+      live_control_match: {Args:{p_match:string;p_action:string};Returns:Json}
+      live_record_event: {Args:{p_match:string;p_request:string;p_kind:string;p_side:string;p_player:string|null;p_assist:string|null;p_minute:number;p_period:number};Returns:string}
+      live_void_event: {Args:{p_event:string};Returns:undefined}
+      live_push_preference: {Args:{p_enabled:boolean};Returns:undefined}
       rincon_comments_page: { Args: {p_match_key?:string|null;p_player_id?:string|null;p_target_id?:string|null;p_offset?:number;p_focus_id?:string|null}; Returns:Json }
       save_rincon_comment: { Args: {p_match_key:string;p_target_id:string;p_body:string;p_mentions?:Json}; Returns:string }
       react_rincon_comment: { Args: {p_id:string;p_emoji?:string|null}; Returns:undefined }
