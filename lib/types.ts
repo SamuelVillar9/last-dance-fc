@@ -1,4 +1,4 @@
-export type Player={id:string;name:string;surname?:string|null;number:number;position:string|null;photo_url:string|null;active:boolean};
+export type Player={id:string;name:string;surname?:string|null;nickname?:string|null;number:number;position:string|null;photo_url:string|null;active:boolean};
 export type Match={key:string;round:number;phase:string;group:string;home:string;away:string;date:string|null;time:string|null;venue:string|null;homeScore:number|null;awayScore:number|null;status:'scheduled'|'played'|'postponed'|'bye'};
 export type Standing={position:number;team:string;points:number;played:number;won:number;drawn:number;lost:number;gf:number;ga:number;gd:number};
 export type FairPlay={team:string;points:number;yellow:number;red:number};
