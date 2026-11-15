@@ -58,6 +58,7 @@ export type Database = {
           id: string
           name: string
           surname: string | null
+          nickname: string | null
           number: number
           photo_url: string | null
           position: string | null
@@ -67,6 +68,7 @@ export type Database = {
           id?: string
           name: string
           surname?: string | null
+          nickname?: string | null
           number: number
           photo_url?: string | null
           position?: string | null
@@ -75,6 +77,8 @@ export type Database = {
           active?: boolean
           id?: string
           name?: string
+          surname?: string | null
+          nickname?: string | null
           number?: number
           photo_url?: string | null
           position?: string | null
