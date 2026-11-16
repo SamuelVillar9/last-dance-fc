@@ -395,7 +395,7 @@ test('administrator can replace the group portrait without changing individual p
  await expect(page.getByText('Foto de equipo guardada. Ya está disponible en Plantilla.',{exact:true})).toBeVisible();expect(uploaded).toBe(true);expect(changedPlayers).toBe(false);expect(portrait.image_path).toMatch(/^official\/[a-f0-9-]+\.webp$/);expect(portrait.caption).toBe('Nuestra foto de equipo');
 });
 
-test('mobile player comparison switches players and opens trading card',async({page})=>{
+test('mobile player comparison works while player cards are unavailable',async({page})=>{
  await page.setViewportSize({width:375,height:812});
  await page.goto('/comparar?a=player-7&b=player-10');
  await expect(page.getByRole('heading',{name:/CARA A/})).toBeVisible();
@@ -405,7 +405,9 @@ test('mobile player comparison switches players and opens trading card',async({p
  await expect(page.locator('#compare-a')).toHaveValue('player-10');
  await expect(page.locator('#compare-b')).toHaveValue('player-7');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
- await page.goto('/plantilla/player-7/carta?style=elite');
- await expect(page.getByText('ESTADÍSTICAS DE ACTAS PUBLICADAS')).toBeVisible();
- await expect(page.getByRole('link',{name:/Descargar carta PNG/})).toHaveAttribute('href',/\/api\/player-card\?player=player-7&style=elite/);
+ await expect(page.getByRole('link',{name:/Carta de/})).toHaveCount(0);
+ const card=await page.request.get('/plantilla/player-7/carta?style=elite');
+ expect(card.status()).toBe(404);
+ const png=await page.request.get('/api/player-card?player=player-7&style=elite');
+ expect(png.status()).toBe(404);
 });
