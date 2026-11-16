@@ -1,9 +1,11 @@
+import {PLAYER_CARDS_ENABLED} from '@/lib/features';
 import {ImageResponse} from 'next/og';
 import {getData} from '@/lib/data';
 import {playerStats} from '@/lib/player-stats';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 export async function GET(request:Request){
+ if(!PLAYER_CARDS_ENABLED)return new Response('Not Found',{status:404});
  const {searchParams}=new URL(request.url);
  const id=searchParams.get('player');
  if(!id||id.length>100)return new Response('Jugador no válido',{status:400});
