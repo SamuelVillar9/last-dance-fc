@@ -104,8 +104,9 @@ begin
     and exists(select 1 from private.team_accounts a join public.players p on p.id=a.player_id and p.active where a.user_id=n.user_id
       and (n.kind='changed' or not exists(select 1 from private.availability v where v.match_key=n.match_key and v.player_id=a.player_id)))
     and exists(select 1 from public.league_snapshots l cross join lateral jsonb_array_elements(l.data->'matches')m
-      where m->>'key'=n.match_key and m->>'status'='scheduled'
-      and (((m->>'date')||' '||coalesce(nullif(m->>'time',''),'00:00'))::timestamp at time zone 'Europe/Madrid')>now())
+      where m->>'key'=n.match_key and
+      (n.kind='changed' or (m->>'status'='scheduled'
+      and (((m->>'date')||' '||coalesce(nullif(m->>'time',''),'00:00'))::timestamp at time zone 'Europe/Madrid')>now())))
     and coalesce((select case when n.kind='activity' then attendance_activity_push when n.kind='changed' then match_changes_push else attendance_push end from private.notification_settings where user_id=n.user_id),n.kind<>'activity')
     order by o.available_at limit 50 for update of o skip locked
    ), claimed as (update private.attendance_push_outbox o set lease_until=now()+interval '2 minutes',attempts=o.attempts+1
