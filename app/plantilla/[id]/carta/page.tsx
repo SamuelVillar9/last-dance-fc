@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import {PLAYER_CARDS_ENABLED} from '@/lib/features';
 import {notFound} from 'next/navigation';
 import {getData} from '@/lib/data';
 import {playerStats} from '@/lib/player-stats';
@@ -7,6 +8,7 @@ import {Title} from '@/components/ui';
 export const dynamic='force-dynamic';
 export const metadata={title:'Carta de jugador | LAST DANCE FC'};
 export default async function Page({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<{style?:string}>}){
+ if(!PLAYER_CARDS_ENABLED)notFound();
  const {id}=await params;const {style}=await searchParams;
  const {players,reports,leagues}=await getData();
  const p=playerStats(players,reports,leagues.flatMap(l=>l.matches)).find(p=>p.id===id);
