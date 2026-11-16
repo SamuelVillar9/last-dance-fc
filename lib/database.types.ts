@@ -132,6 +132,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      attendance_notices: {Args:{p_action?:string;p_payload?:Json};Returns:Json}
+      attendance_dispatch: {Args:{p_action:string;p_payload?:Json};Returns:Json}
       live_my_permissions: {Args:never;Returns:Json}
       live_admin_permissions: {Args:never;Returns:Json}
       live_set_permission: {Args:{p_user:string;p_record:boolean;p_control:boolean};Returns:undefined}

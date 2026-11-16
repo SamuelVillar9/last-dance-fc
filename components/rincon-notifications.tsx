@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import {AttendancePushPanel} from './attendance-push-panel';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {Bell,Settings,X} from 'lucide-react';
 import {browserDb} from '@/lib/browser-db';
@@ -14,6 +15,8 @@ function installed(){return matchMedia('(display-mode: standalone)').matches||!!
 function needsInstall(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1}
 export function RinconNotifications(){
  const db=browserDb(),dialog=useRef<HTMLDialogElement>(null);
+ const [attendanceUnread,setAttendanceUnread]=useState(0);
+ useEffect(()=>{const onCount=(e:Event)=>setAttendanceUnread(Number((e as CustomEvent<number>).detail)||0);window.addEventListener('attendance-notices-count',onCount);return()=>window.removeEventListener('attendance-notices-count',onCount)},[]);
  const [livePush,setLivePush]=useState(true);const [uid,setUid]=useState<string|null>(null),[data,setData]=useState<Notices|null>(null),[panel,setPanel]=useState<'tutorial'|'settings'|'notices'|null>(null);
  const [endpoint,setEndpoint]=useState(''),[publicKey,setPublicKey]=useState(''),[configured,setConfigured]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[supported,setSupported]=useState(false),[permission,setPermission]=useState('default'),[installFirst,setInstallFirst]=useState(false);
  const account=useRef(uid);account.current=uid;
@@ -35,6 +38,7 @@ export function RinconNotifications(){
   const {data,error}=await db.rpc('rincon_notices',{p_payload:{endpoint}});
   if(account.current!==owner||error||!data||typeof data!=='object'||!('items' in data)||!Array.isArray(data.items))return;
   setData(data as unknown as Notices);
+  void db.rpc('attendance_notices',{p_action:'list'}).then(({data:attendance})=>{if(account.current===owner&&attendance&&typeof attendance==='object'&&'unread' in attendance)setAttendanceUnread(Number(attendance.unread)||0)});
   void db.rpc('live_my_permissions').then(({data:pref})=>{if(account.current===owner&&pref&&typeof pref==='object'&&'live_push' in pref)setLivePush(!!pref.live_push)});
  },[db,uid,endpoint]);
  useEffect(()=>{
@@ -79,11 +83,12 @@ export function RinconNotifications(){
  async function post(payload:unknown){const {data}=await db!.auth.getSession();if(!data.session)throw Error('Vuelve a iniciar sesión');const response=await fetch('/api/rincon',{method:'POST',headers:{Authorization:'Bearer '+data.session.access_token,'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json();if(!response.ok)throw Error(result.error??'No se pudo enviar la prueba')}
  if(!uid||!data)return null;
  const active=data.device_active&&permission==='granted';
- return <><button type="button" data-private-ui="true" className="theme-toggle notices-bell" aria-label={'Notificaciones'+(data.unread?' · '+data.unread+' sin leer':'')} onClick={()=>{setMessage('');setPanel('notices')}}><Bell size={19}/>{data.unread>0&&<span className="notices-count">{data.unread>99?'99+':data.unread}</span>}</button>
+ return <><button type="button" data-private-ui="true" className="theme-toggle notices-bell" aria-label={'Notificaciones'+(data.unread+attendanceUnread?' · '+(data.unread+attendanceUnread)+' sin leer':'')} onClick={()=>{setMessage('');setPanel('notices')}}><Bell size={19}/>{data.unread+attendanceUnread>0&&<span className="notices-count">{data.unread+attendanceUnread>99?'99+':data.unread+attendanceUnread}</span>}</button>
  <dialog ref={dialog} data-private-ui="true" className="rincon-dialog" aria-labelledby="notices-title" onCancel={event=>{event.preventDefault();if(!busy)later()}}>
  <div className="notices-heading"><h2 id="notices-title">{panel==='tutorial'?'QUE NO SE TE ESCAPE EL SALSEO.':panel==='settings'?'NOTIFICACIONES.':'TUS AVISOS.'}</h2><button type="button" className="theme-toggle" aria-label="Cerrar" disabled={busy} onClick={later}><X size={20}/></button></div>
  {panel==='notices'?<>
   <div className="team-actions"><button type="button" className="chip" onClick={()=>{setMessage('');setPanel('settings')}}><Settings size={16}/> Ajustes</button><button type="button" className="chip" disabled={busy||!data.unread} onClick={()=>void run(()=>action('read'))}>Marcar todos como leídos</button></div>
+  <AttendancePushPanel mode="notices"/>
   {!data.items.length&&<p className="muted">Cuando un compañero te mencione, aparecerá aquí.</p>}
   <ul className="notices-list">{data.items.map(n=><li key={n.id} className={n.read_at?'':'notice-unread'}><Link href={'/partidos/'+encodeURIComponent(n.match_key)+'?jugador='+encodeURIComponent(n.target_player_id)+'&aviso='+n.id+'&comentario='+n.comment_id+'#comentario-'+n.comment_id} onClick={()=>{void action('read',{id:n.id}).catch(()=>{});later()}}><b>{n.author_name} te ha mencionado</b><span>En El rincón de rajar · {new Date(n.created_at).toLocaleDateString('es-ES')}</span></Link></li>)}</ul>
  </>:<>
@@ -98,6 +103,7 @@ export function RinconNotifications(){
   {active&&<><button type="button" className="action secondary" disabled={busy} onClick={()=>void run(async()=>{await post({action:'test',endpoint});setMessage('Prueba aceptada por el servicio push. Comprueba el centro de notificaciones. Si no aparece, revisa los ajustes del dispositivo.')})}>Enviar prueba</button><button type="button" className="action secondary" disabled={busy} onClick={()=>void run(async()=>{await action('unsubscribe',{endpoint});setMessage('Avisos desactivados en este dispositivo.')})}>Desactivar este dispositivo</button></>}</div>
   <label className="push-preference"><input type="checkbox" checked={data.mentions_push} disabled={busy} onChange={event=>void run(()=>action('settings',{mentions_push:event.target.checked}))}/> Recibir push de menciones en mis dispositivos activados</label>
   <label className="push-preference"><input type="checkbox" checked={livePush} disabled={busy} onChange={event=>void run(async()=>{if(!db)throw Error('Inicia sesión');const {error}=await db.rpc('live_push_preference',{p_enabled:event.target.checked});if(error)throw error;setLivePush(event.target.checked)})}/> Recibir avisos de los acontecimientos del partido en directo (aunque no esté convocado)</label><p className="muted">Los avisos del directo requieren tener activadas las notificaciones en este dispositivo. Puedes desactivarlos sin dejar de recibir menciones.</p>
+  <AttendancePushPanel mode="settings"/>
   {panel==='tutorial'&&<div className="team-actions"><button type="button" className="action secondary" disabled={busy} onClick={later}>Ahora no</button><button type="button" className="action secondary" disabled={busy} onClick={()=>void run(async()=>{await action('settings',{tutorial_dismissed:true});later()})}>No mostrar de nuevo</button></div>}
  </>}
  {message&&<p role="status" className="admin-message">{message}</p>}
