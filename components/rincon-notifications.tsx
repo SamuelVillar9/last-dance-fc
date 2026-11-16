@@ -15,6 +15,8 @@ function installed(){return matchMedia('(display-mode: standalone)').matches||!!
 function needsInstall(){return /iPad|iPhone|iPod/.test(navigator.userAgent)||navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1}
 export function RinconNotifications(){
  const db=browserDb(),dialog=useRef<HTMLDialogElement>(null);
+ const [attendanceUnread,setAttendanceUnread]=useState(0);
+ useEffect(()=>{const onCount=(e:Event)=>setAttendanceUnread(Number((e as CustomEvent<number>).detail)||0);window.addEventListener('attendance-notices-count',onCount);return()=>window.removeEventListener('attendance-notices-count',onCount)},[]);
  const [livePush,setLivePush]=useState(true);const [uid,setUid]=useState<string|null>(null),[data,setData]=useState<Notices|null>(null),[panel,setPanel]=useState<'tutorial'|'settings'|'notices'|null>(null);
  const [endpoint,setEndpoint]=useState(''),[publicKey,setPublicKey]=useState(''),[configured,setConfigured]=useState(false),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[supported,setSupported]=useState(false),[permission,setPermission]=useState('default'),[installFirst,setInstallFirst]=useState(false);
  const account=useRef(uid);account.current=uid;
@@ -80,7 +82,7 @@ export function RinconNotifications(){
  async function post(payload:unknown){const {data}=await db!.auth.getSession();if(!data.session)throw Error('Vuelve a iniciar sesión');const response=await fetch('/api/rincon',{method:'POST',headers:{Authorization:'Bearer '+data.session.access_token,'Content-Type':'application/json'},body:JSON.stringify(payload)});const result=await response.json();if(!response.ok)throw Error(result.error??'No se pudo enviar la prueba')}
  if(!uid||!data)return null;
  const active=data.device_active&&permission==='granted';
- return <><button type="button" data-private-ui="true" className="theme-toggle notices-bell" aria-label={'Notificaciones'+(data.unread?' · '+data.unread+' sin leer':'')} onClick={()=>{setMessage('');setPanel('notices')}}><Bell size={19}/>{data.unread>0&&<span className="notices-count">{data.unread>99?'99+':data.unread}</span>}</button>
+ return <><button type="button" data-private-ui="true" className="theme-toggle notices-bell" aria-label={'Notificaciones'+(data.unread+attendanceUnread?' · '+(data.unread+attendanceUnread)+' sin leer':'')} onClick={()=>{setMessage('');setPanel('notices')}}><Bell size={19}/>{data.unread+attendanceUnread>0&&<span className="notices-count">{data.unread+attendanceUnread>99?'99+':data.unread+attendanceUnread}</span>}</button>
  <dialog ref={dialog} data-private-ui="true" className="rincon-dialog" aria-labelledby="notices-title" onCancel={event=>{event.preventDefault();if(!busy)later()}}>
  <div className="notices-heading"><h2 id="notices-title">{panel==='tutorial'?'QUE NO SE TE ESCAPE EL SALSEO.':panel==='settings'?'NOTIFICACIONES.':'TUS AVISOS.'}</h2><button type="button" className="theme-toggle" aria-label="Cerrar" disabled={busy} onClick={later}><X size={20}/></button></div>
  {panel==='notices'?<>
