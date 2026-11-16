@@ -116,29 +116,24 @@ grant execute on function public.attendance_notices(text,jsonb) to authenticated
 
 create or replace function public.attendance_dispatch(p_action text,p_payload jsonb default '{}') returns jsonb
 language plpgsql security definer set search_path='' as $$
-declare j jsonb;v_id uuid;v_status int;
+declare j jsonb;v_status int;
 begin
  if auth.role() is distinct from 'service_role' then raise exception 'Access denied';end if;
  if p_action='prepare' then
   -- Process official fixtures only. A postponed fixture without a valid time is excluded.
-  with fixtures as (
-   select distinct on (m->>'key') m->>'key' mk,
-    ((m->>'date')||' '||coalesce(nullif(m->>'time',''),'00:00'))::timestamp at time zone 'Europe/Madrid' kickoff
-   from public.league_snapshots l cross join lateral jsonb_array_elements(l.data->'matches') m
-   where (m->>'home'='LAST DANCE' or m->>'away'='LAST DANCE')
-    and m->>'status'='scheduled' and m->>'date' ~ '^\\d{4}-\\d{2}-\\d{2}$'
-   order by m->>'key'
-  ), recipients as (
-   select f.mk,f.kickoff,a.user_id,a.player_id,
-    coalesce(s.attendance_push,true) reminders,coalesce(s.attendance_activity_push,false) activity
-   from fixtures f join private.team_accounts a on true join public.players p on p.id=a.player_id and p.active
+  v_status:=0;
+  for j in
+   select jsonb_build_object('mk',m->>'key','kickoff',(((m->>'date')||' '||coalesce(nullif(m->>'time',''),'00:00'))::timestamp at time zone 'Europe/Madrid'),
+      'user_id',a.user_id,'reminders',coalesce(s.attendance_push,true),'activity',coalesce(s.attendance_activity_push,false)) as item
+   from public.league_snapshots l cross join lateral jsonb_array_elements(l.data->'matches')m
+   join private.team_accounts a on true join public.players p on p.id=a.player_id and p.active
    left join private.notification_settings s on s.user_id=a.user_id
-   where f.kickoff>now() and not exists(select 1 from private.availability v where v.match_key=f.mk and v.player_id=a.player_id)
-  )
-  select count(*) into v_status from recipients;
-  for j in select to_jsonb(r) from (
-   select * from recipients
-  ) r loop
+   where (m->>'home'='LAST DANCE' or m->>'away'='LAST DANCE') and m->>'status'='scheduled'
+     and m->>'date' ~ '^\\d{4}-\\d{2}-\\d{2}$'
+     and (((m->>'date')||' '||coalesce(nullif(m->>'time',''),'00:00'))::timestamp at time zone 'Europe/Madrid')>now()
+     and not exists(select 1 from private.availability v where v.match_key=m->>'key' and v.player_id=a.player_id)
+  loop
+   j:=j->'item';v_status:=v_status+1;
    if (j->>'reminders')::boolean then
     if (j->>'kickoff')::timestamptz-now()<=interval '48 hours' and (j->>'kickoff')::timestamptz-now()>interval '24 hours' then
      perform private.attendance_enqueue((j->>'user_id')::uuid,j->>'mk','reminder48','48h','LAST DANCE · ¿Vienes al partido?','Faltan menos de 48 horas y todavía no has respondido. Confirma tu asistencia.',now());
@@ -147,7 +142,6 @@ begin
     end if;
    end if;
    if (j->>'activity')::boolean then
-    for v_id in select distinct a.window_start::text::uuid from private.attendance_activity a where false loop null;end loop;
     perform private.attendance_enqueue((j->>'user_id')::uuid,j->>'mk','activity',
      to_char(to_timestamp(floor(extract(epoch from now()-interval '30 minutes')/1800)*1800) at time zone 'UTC','YYYYMMDDHH24MI'),
      'LAST DANCE · ¡El vestuario se mueve!',
