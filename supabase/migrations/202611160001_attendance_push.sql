@@ -142,13 +142,13 @@ begin
     end if;
    end if;
    if (j->>'activity')::boolean then
+    if exists(select 1 from private.attendance_activity a where a.match_key=j->>'mk' and a.window_start=to_timestamp(floor(extract(epoch from now()-interval '30 minutes')/1800)*1800)) then
     perform private.attendance_enqueue((j->>'user_id')::uuid,j->>'mk','activity',
      to_char(to_timestamp(floor(extract(epoch from now()-interval '30 minutes')/1800)*1800) at time zone 'UTC','YYYYMMDDHH24MI'),
      'LAST DANCE · ¡El vestuario se mueve!',
      'Varios compañeros han actualizado su asistencia. ¡Falta tu respuesta!',
-     now())
-    where exists(select 1 from private.attendance_activity a where a.match_key=j->>'mk'
-      and a.window_start=to_timestamp(floor(extract(epoch from now()-interval '30 minutes')/1800)*1800));
+     now());
+    end if;
    end if;
   end loop;
   return jsonb_build_object('prepared',v_status);
