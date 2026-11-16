@@ -133,7 +133,7 @@ begin
      and (((m->>'date')||' '||coalesce(nullif(m->>'time',''),'00:00'))::timestamp at time zone 'Europe/Madrid')>now()
      and not exists(select 1 from private.availability v where v.match_key=m->>'key' and v.player_id=a.player_id)
   loop
-   j:=j->'item';v_status:=v_status+1;
+   v_status:=v_status+1;
    if (j->>'reminders')::boolean then
     if (j->>'kickoff')::timestamptz-now()<=interval '48 hours' and (j->>'kickoff')::timestamptz-now()>interval '24 hours' then
      perform private.attendance_enqueue((j->>'user_id')::uuid,j->>'mk','reminder48','48h','LAST DANCE · ¿Vienes al partido?','Faltan menos de 48 horas y todavía no has respondido. Confirma tu asistencia.',now());
