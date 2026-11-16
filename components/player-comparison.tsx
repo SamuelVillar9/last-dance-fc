@@ -11,7 +11,7 @@ function Polygon({values,color}:{values:number[];color:string}){
  const points=values.map((v,i)=>{const angle=-Math.PI/2+2*Math.PI*i/n;return (cx+Math.cos(angle)*r*v)+','+(cy+Math.sin(angle)*r*v)}).join(' ');
  return <polygon points={points} fill={color} fillOpacity=".16" stroke={color} strokeWidth="3" strokeLinejoin="round"/>;
 }
-export function PlayerComparison({players,initialA,initialB}:{players:PlayerStats[];initialA?:string;initialB?:string;histories:Record<string,EvolutionPoint[]>}){
+export function PlayerComparison({players,initialA,initialB,histories}:{players:PlayerStats[];initialA?:string;initialB?:string;histories:Record<string,EvolutionPoint[]>}){
  const first=players.find(p=>p.id===initialA)?.id??players[0]?.id??'';
  const second=players.find(p=>p.id===initialB&&p.id!==first)?.id??players.find(p=>p.id!==first)?.id??'';
  const [aId,setA]=useState(first),[bId,setB]=useState(second);
