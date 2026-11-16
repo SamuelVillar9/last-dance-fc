@@ -129,7 +129,7 @@ begin
    join private.team_accounts a on true join public.players p on p.id=a.player_id and p.active
    left join private.notification_settings s on s.user_id=a.user_id
    where (m->>'home'='LAST DANCE' or m->>'away'='LAST DANCE') and m->>'status'='scheduled'
-     and m->>'date' ~ '^\\d{4}-\\d{2}-\\d{2}$'
+     and m->>'date' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
      and (((m->>'date')||' '||coalesce(nullif(m->>'time',''),'00:00'))::timestamp at time zone 'Europe/Madrid')>now()
      and not exists(select 1 from private.availability v where v.match_key=m->>'key' and v.player_id=a.player_id)
   loop
