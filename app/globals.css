@@ -148,3 +148,65 @@
 /* Player evolution · responsive interactive curves */
 .evo{margin:38px 0 42px}.evo-heading{display:flex;justify-content:space-between;align-items:end;gap:16px;margin-bottom:20px}.evo-eyebrow{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--muted)}.evo-heading h2{font:900 italic clamp(32px,6vw,62px)/.95 'Barlow Condensed',sans-serif;letter-spacing:-.7px;margin:9px 0}.evo-heading h2 span{color:var(--red)}.evo-heading p{color:var(--muted);margin:0;font-size:14px}.evo-season{font:900 italic 52px/1 'Barlow Condensed';color:var(--line)}.evo-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:12px}.evo-kpis>div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:17px 15px;min-width:0}.evo-kpis span,.evo-insights span{display:block;font-size:10px;letter-spacing:1.2px;font-weight:700;color:var(--muted)}.evo-kpis strong{display:block;font:800 italic 38px/1.2 'Barlow Condensed';margin-top:7px}.evo-panel{border:1px solid var(--line);border-radius:18px;padding:22px;background:var(--bg);overflow:hidden}.evo-controls{display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between;align-items:center}.evo-metrics,.evo-segment{display:flex;flex-wrap:wrap;gap:6px}.evo-metrics button,.evo-segment button{border:1px solid var(--line);border-radius:20px;background:var(--panel);color:var(--ink);padding:8px 12px;font-size:12px;font-weight:700}.evo-metrics button.active{border-color:var(--metric-color);box-shadow:inset 0 -3px var(--metric-color)}.evo-segment button.active{background:var(--ink);color:var(--bg)}.evo-options{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.evo-period{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px}.evo-period select{max-width:170px;padding:8px 10px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px}.evo-current{display:flex;align-items:baseline;flex-wrap:wrap;gap:10px;margin:25px 0 4px}.evo-current>span{color:var(--muted);font-size:13px}.evo-current strong{font:900 italic 46px/1 'Barlow Condensed'}.evo-current small{color:var(--muted);font-size:12px}.evo-chart-scroll{width:100%;overflow-x:auto;overscroll-behavior-x:contain}.evo-chart{display:block;width:100%;min-width:490px;height:auto;overflow:visible;color:var(--ink);touch-action:pan-y}.evo-line{transition:stroke .2s}.evo-chart [role=button]{cursor:pointer;outline:none}.evo-chart [role=button]:focus-visible{stroke:var(--ink);stroke-width:2}.evo-match-detail{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px;border-top:1px solid var(--line);padding:17px 0}.evo-match-detail>div:first-child{display:grid;gap:4px}.evo-match-detail>div:first-child span{font-size:10px;letter-spacing:1.2px;color:var(--muted)}.evo-match-detail>div:first-child strong{font-size:15px}.evo-match-detail small{color:var(--muted)}.evo-match-numbers{display:flex;gap:15px}.evo-match-numbers span{font-size:12px;color:var(--muted)}.evo-match-numbers b{font-size:19px;color:var(--ink)}.evo-match-detail a{font-size:12px;color:var(--red-text);font-weight:700}.evo-scrub{display:flex;gap:12px;align-items:center;font-size:12px;color:var(--muted)}.evo-scrub input{flex:1;min-width:30px;accent-color:var(--red)}.evo-insights{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}.evo-insights>div{border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}.evo-insights strong{display:block;font:800 italic 34px/1.3 'Barlow Condensed';margin-top:5px}.evo-insights small{font-size:12px;color:var(--muted)}.evo-footnote{font-size:12px;line-height:1.5;color:var(--muted);margin:13px 0 0}.evo-empty{padding:26px;border:1px solid var(--line);border-radius:14px;margin:28px 0}.evo-empty h2{font:800 italic 30px 'Barlow Condensed';margin-bottom:8px}.evo-empty p{margin:0;color:var(--muted)}@media(max-width:650px){.evo{margin:26px 0}.evo-season{font-size:34px}.evo-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.evo-kpis>div{padding:12px}.evo-kpis strong{font-size:32px}.evo-panel{padding:14px;border-radius:12px}.evo-controls,.evo-options{align-items:stretch}.evo-metrics{width:100%}.evo-metrics button{flex:1;font-size:11px;padding:9px 5px}.evo-period{flex:1}.evo-period select{flex:1;min-width:0}.evo-current{margin-top:18px}.evo-insights{grid-template-columns:1fr}.evo-insights>div{padding:13px}.evo-match-detail{align-items:flex-start}.evo-match-numbers{width:100%}.evo-scrub{margin-top:10px}}
 @media(prefers-reduced-motion:reduce){.evo-line{transition:none}}
+
+/* LAST DANCE: comparison and trading cards */
+.roster-tools,.player-profile-actions{display:flex;gap:12px;flex-wrap:wrap;margin:24px 0}
+.versus{display:grid;gap:28px;max-width:1100px;margin:24px auto 80px}
+.versus-pickers{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:end}
+.versus-pickers label{display:block;color:var(--muted);font-weight:700;font-size:13px;margin-bottom:7px}
+.versus-pickers select{width:100%;min-width:0;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:13px}
+.versus-swap{border:1px solid var(--line);border-radius:50%;background:var(--panel);color:var(--ink);font-size:27px;width:49px;height:49px}
+.versus-heroes{display:grid;grid-template-columns:1fr 64px 1fr;align-items:center;gap:15px}
+.versus-player{min-width:0;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px}
+.versus-player .avatar{width:100%;max-width:220px;height:240px;overflow:hidden}
+.versus-player strong{font:800 30px 'Barlow Condensed',sans-serif;text-transform:uppercase}
+.versus-player span,.versus-player a{color:var(--muted);font-size:13px}
+.versus-mark{font:800 italic 44px 'Barlow Condensed',sans-serif;color:var(--red);text-align:center}
+.versus-actions{display:flex;gap:12px;flex-wrap:wrap}
+.versus-actions a{padding:10px 15px;background:var(--panel);border:1px solid var(--line);border-radius:10px;font-weight:700;font-size:13px}
+.versus-data,.versus-radar{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px}
+.versus-data h2,.versus-radar h2{font:800 italic 28px 'Barlow Condensed',sans-serif}
+.versus-stat{margin:18px 0}
+.versus-stat-line{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.versus-stat-line strong{font-size:21px;min-width:45px}
+.versus-stat-line strong:last-child{text-align:right}
+.versus-stat-line span{color:var(--muted);text-align:center}
+.versus-stat-line .winner{color:var(--red)}
+.versus-stat-bars{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px}
+.versus-stat-bars>div{height:7px;background:var(--line);border-radius:20px;overflow:hidden}
+.versus-stat-bars>div:first-child{direction:rtl}
+.versus-stat-bars span{display:block;height:100%;background:var(--red);border-radius:20px}
+.versus-stat-bars>div:last-child span{background:#e8a23b}
+.versus-radar{text-align:center}
+.versus-radar p,.versus-note{color:var(--muted);font-size:13px}
+.versus-radar svg{width:100%;max-width:460px;overflow:visible;margin:14px auto}
+.versus-legend{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
+.versus-legend span{display:flex;align-items:center;gap:7px}
+.versus-legend i{width:12px;height:12px;border-radius:50%}
+.trading-card-page{display:flex;gap:36px;align-items:flex-start;flex-wrap:wrap;margin:30px 0 80px}
+.trading-card{position:relative;overflow:hidden;width:min(100%,370px);flex:none;min-height:555px;background:linear-gradient(155deg,#292930,#0c0c10 60%,#2e0710);border:5px solid #f72441;clip-path:polygon(9% 0,91% 0,100% 7%,100% 93%,91% 100%,9% 100%,0 93%,0 7%);padding:22px;color:white;box-shadow:0 15px 35px #0003}
+.trading-card-elite{background:linear-gradient(145deg,#473519,#17130e 55%,#5a3813);border-color:#e8b95a}
+.trading-card-top,.trading-card-bottom{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:800;letter-spacing:2px}
+.trading-card-top{color:#fff9}
+.trading-card-identity{display:flex;align-items:center;min-height:240px;gap:8px}
+.trading-card-identity>div:first-child{display:flex;flex-direction:column;align-items:center;width:74px}
+.trading-card-identity>div:first-child strong{font:900 62px 'Barlow Condensed',sans-serif}
+.trading-card-identity>div:first-child span{font-size:10px;text-align:center}
+.trading-card-avatar{flex:1;min-width:0}
+.trading-card-avatar .avatar{height:236px;width:100%;max-width:230px;overflow:hidden}
+.trading-card-name{border-top:2px solid #ffffff60;display:flex;flex-direction:column;padding:10px 0}
+.trading-card-name small{font-size:12px;color:#ffcdcd}
+.trading-card-name strong{font:800 34px 'Barlow Condensed',sans-serif;text-transform:uppercase;line-height:1.1}
+.trading-card-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.trading-card-stats>div{display:flex;flex-direction:column;align-items:center;padding:8px;background:#ffffff18;border-radius:9px}
+.trading-card-stats strong{font-size:25px}
+.trading-card-stats span{font-size:11px;letter-spacing:1px}
+.trading-card-bottom{font-size:9px;color:#fff9}
+.trading-card-download{display:block;text-align:center;padding:14px 0;color:#fff;font-weight:800;text-decoration:underline}
+.trading-card-side{flex:1;min-width:230px;max-width:390px}
+.card-style-options{display:flex;gap:12px;margin:20px 0}
+.card-style-options a{border:1px solid var(--line);padding:12px 18px;border-radius:12px}
+.card-style-options a[aria-current=page]{border-color:var(--red);color:var(--red)}
+@media(max-width:600px){.versus{gap:18px}.versus-pickers{gap:6px}.versus-pickers select{font-size:12px;padding:10px 4px}.versus-swap{width:34px;height:34px;font-size:19px}.versus-heroes{grid-template-columns:minmax(0,1fr) 36px minmax(0,1fr);gap:4px}.versus-player .avatar{height:175px}.versus-player strong{font-size:21px}.versus-mark{font-size:28px}.versus-data,.versus-radar{padding:15px}.versus-radar svg{max-width:310px}.trading-card-page{justify-content:center}.trading-card{width:min(100%,370px)}}
+
+.versus-curve{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px;text-align:center}.versus-curve h2{font:800 italic 28px 'Barlow Condensed',sans-serif}.versus-curve p{color:var(--muted);font-size:13px}.versus-curve svg{width:100%;max-width:680px;overflow:visible}.versus-curve-controls{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin:16px 0}.versus-curve-controls label{display:flex;gap:8px;align-items:center}.versus-curve-controls select{background:var(--bg);color:var(--ink);border:1px solid var(--line);padding:9px;border-radius:8px}
