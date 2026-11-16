@@ -10,7 +10,7 @@ export function AttendancePushPanel({mode}:{mode:'settings'|'notices'}){
   if(!db)return;
   const {data:session}=await db.auth.getSession();if(!session.session)return;
   const {data:result,error}=await db.rpc('attendance_notices',{p_action:'list'});
-  if(!error&&result)setData(result as unknown as Data);
+  if(!error&&result){setData(result as unknown as Data);window.dispatchEvent(new CustomEvent('attendance-notices-count',{detail:(result as unknown as Data).unread}));}
  },[db]);
  useEffect(()=>{void load()},[load]);
  async function update(payload:Record<string,boolean>){
