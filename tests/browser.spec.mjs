@@ -146,11 +146,20 @@ test('player cannot see the activity panel, and session activity is recorded wit
 });
 test('home countdown updates to the requested match-day message at Madrid kickoff',async({page})=>{
  await page.setViewportSize({width:375,height:812});
- await page.clock.setFixedTime(new Date('2026-11-08T13:59:58Z'));
+ // The server chooses the next fixture using the current Madrid date. Read its
+ // rendered kickoff instead of hardcoding a past fixture that may no longer be next.
  await page.goto('/');
- await expect(page.getByRole('timer',{name:'Tiempo hasta el partido'})).toBeVisible();
+ const countdown=page.getByRole('timer',{name:'Tiempo hasta el partido'});
+ await expect(countdown).toBeVisible();
+ const kickoff=Number(await countdown.getAttribute('data-match-target'));
+ expect(Number.isFinite(kickoff)).toBe(true);
+ await page.clock.setFixedTime(new Date(kickoff-2000));
+ await expect(countdown).toBeVisible();
  await page.screenshot({path:'/tmp/lastdance-countdown-mobile.png',fullPage:true});
- await page.clock.setFixedTime(new Date('2026-11-08T14:00:01Z'));
+ // setFixedTime updates Date.now without advancing timers. The component
+ // deliberately refreshes on visibilitychange, so exercise that real handler.
+ await page.clock.setFixedTime(new Date(kickoff+1000));
+ await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));
  await expect(page.getByText('¡DÍA DE PARTIDO!',{exact:true})).toBeVisible();
  await expect(page.getByRole('timer')).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
