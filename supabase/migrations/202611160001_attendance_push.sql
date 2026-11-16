@@ -153,8 +153,7 @@ begin
   end loop;
   return jsonb_build_object('prepared',v_status);
  elsif p_action='claim' then
-  return (select coalesce(jsonb_agg(row_to_json(t)),'[]'::jsonb) from (
-   with picked as (
+  with picked as (
     select o.id from private.attendance_push_outbox o
     join private.attendance_notifications n on n.id=o.notification_id
     where not o.finished and o.available_at<=now() and (o.lease_until is null or o.lease_until<now()) and o.attempts<5
@@ -167,9 +166,11 @@ begin
     order by o.available_at limit 50 for update of o skip locked
    ), claimed as (update private.attendance_push_outbox o set lease_until=now()+interval '2 minutes',attempts=o.attempts+1
     from picked where o.id=picked.id returning o.id,o.notification_id,o.subscription_id)
-   select c.id,n.match_key,n.title,n.body,s.endpoint,s.p256dh,s.auth
-   from claimed c join private.attendance_notifications n on n.id=c.notification_id join private.push_subscriptions s on s.id=c.subscription_id
-  )t);
+   select coalesce(jsonb_agg(row_to_json(t)),'[]'::jsonb) into j from (
+    select c.id,n.match_key,n.title,n.body,s.endpoint,s.p256dh,s.auth
+    from claimed c join private.attendance_notifications n on n.id=c.notification_id join private.push_subscriptions s on s.id=c.subscription_id
+   )t;
+  return j;
  elsif p_action='finish' then
   update private.attendance_push_outbox set finished=(p_payload->>'status')::int between 200 and 299
     or (p_payload->>'status')::int between 400 and 499 and (p_payload->>'status')::int not in (408,429),
