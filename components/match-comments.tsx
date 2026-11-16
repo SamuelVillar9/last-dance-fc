@@ -7,7 +7,7 @@ import {MessageCircle} from 'lucide-react';
 import {browserDb} from '@/lib/browser-db';
 import {commentLength,mergeComments,validComment,type CommentsPage,type MatchComment} from '@/lib/comments';
 import {dateLabel} from '@/lib/format';
-import type {Match,Player,Report} from '@/lib/types';
+import {isGoalkeeper,type Match,type Player,type Report} from '@/lib/types';
 
 type Props={players:Player[];match?:Match;report?:Report;playerId?:string;matches?:Match[]};
 const timestamp=(value:string)=>new Date(value).toLocaleString('es-ES',{timeZone:'Europe/Madrid',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
@@ -101,9 +101,9 @@ export function MatchComments({players,match,report,playerId,matches=[]}:Props){
  const profile=!match;
  return <>
  {match&&report&&<>
-  <div className="table-scroll comment-acta"><table><thead><tr><th>JUGADOR</th><th>GOLES</th><th>ASIST.</th><th>TA</th><th>TR</th></tr></thead><tbody>{report.entries.map(entry=>{
+  <div className="table-scroll comment-acta"><table><thead><tr><th>JUGADOR</th><th>GOLES</th><th>ASIST.</th><th>GE</th><th>TA</th><th>TR</th></tr></thead><tbody>{report.entries.map(entry=>{
    const player=players.find(p=>p.id===entry.playerId);
-   return <tr key={entry.playerId}><td><div className="comment-player-cell"><Link href={'/plantilla/'+entry.playerId}>#{player?.number} {player?.name??'Jugador'}</Link>{match.status==='played'&&player&&<button type="button" className="comment-bubble" disabled={busy} aria-label={`${viewer?.can_write?'Comentar sobre':'Ver comentarios sobre'} ${player.name} · #${player.number}`} onClick={()=>choose(player.id,!!viewer?.can_write)}><MessageCircle size={17}/><span>{data?.counts[player.id]??0}</span></button>}</div></td><td>{entry.goals}</td><td>{entry.assists}</td><td>{entry.yellow}</td><td>{entry.red}</td></tr>;
+   return <tr key={entry.playerId}><td><div className="comment-player-cell"><Link href={'/plantilla/'+entry.playerId}>#{player?.number} {player?.name??'Jugador'}</Link>{match.status==='played'&&player&&<button type="button" className="comment-bubble" disabled={busy} aria-label={`${viewer?.can_write?'Comentar sobre':'Ver comentarios sobre'} ${player.name} · #${player.number}`} onClick={()=>choose(player.id,!!viewer?.can_write)}><MessageCircle size={17}/><span>{data?.counts[player.id]??0}</span></button>}</div></td><td>{entry.goals}</td><td>{entry.assists}</td><td>{player&&isGoalkeeper(player)?entry.goalsConceded??'—':'—'}</td><td>{entry.yellow}</td><td>{entry.red}</td></tr>;
   })}</tbody></table></div>
   {report.note&&<p className="report-note">{report.note}</p>}
  </>}

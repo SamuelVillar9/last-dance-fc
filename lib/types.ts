@@ -3,7 +3,9 @@ export type Match={key:string;round:number;phase:string;group:string;home:string
 export type Standing={position:number;team:string;points:number;played:number;won:number;drawn:number;lost:number;gf:number;ga:number;gd:number};
 export type FairPlay={team:string;points:number;yellow:number;red:number};
 export type League={matches:Match[];standings:Standing[];fairPlay:FairPlay[];updatedAt:string;phase:string;group:string};
-export type Entry={playerId:string;goals:number;assists:number;yellow:number;red:number};
+export type Entry={playerId:string;goals:number;assists:number;yellow:number;red:number;goalsConceded?:number|null};
+export const isGoalkeeper=(player:Pick<Player,'position'>)=>player.position?.trim().toLocaleLowerCase('es')==='portero';
+export function concededTotal(reports:Report[],playerId:string):number|null{const values=reports.flatMap(r=>r.entries.filter(e=>e.playerId===playerId).map(e=>e.goalsConceded).filter((n):n is number=>typeof n==='number'));return values.length?values.reduce((sum,n)=>sum+n,0):null;}
 export type Report={match_key:string;entries:Entry[];note:string;updated_at:string};
 export const CLUB='LAST DANCE';
 export const isClub=(name:string)=>name.trim().toUpperCase().replace(/\s+FC$/,'')===CLUB;
