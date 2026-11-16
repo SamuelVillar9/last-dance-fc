@@ -16,7 +16,7 @@ begin
   coalesce(m->>'venue',m->>'court','') venue,m->>'status' status
   from public.league_snapshots l cross join lateral jsonb_array_elements(l.data->'matches') m
   where (m->>'home'='LAST DANCE' or m->>'away'='LAST DANCE')
-   and m->>'date' ~ '^\\d{4}-\\d{2}-\\d{2}$'
+   and m->>'date' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
   order by m->>'key'
  loop
   select * into old from private.attendance_fixture_state where match_key=f.mk;
@@ -37,7 +37,7 @@ begin
   else
    headline:='LAST DANCE · Cambio de partido';message:='Se han actualizado los datos del partido. Revisa la fecha, la hora o la pista.';
   end if;
-  if f.status='scheduled' and f.match_time ~ '^\\d{2}:\\d{2}$' then
+  if f.status='scheduled' and f.match_time ~ '^[0-9]{2}:[0-9]{2}$' then
    due:=(f.match_date||' '||f.match_time)::timestamp at time zone 'Europe/Madrid';
   else
    due:=(f.match_date||' 23:59')::timestamp at time zone 'Europe/Madrid';
@@ -72,7 +72,7 @@ begin
    join private.team_accounts a on true join public.players p on p.id=a.player_id and p.active
    left join private.notification_settings s on s.user_id=a.user_id
    where (m->>'home'='LAST DANCE' or m->>'away'='LAST DANCE') and m->>'status'='scheduled'
-     and m->>'date' ~ '^\\d{4}-\\d{2}-\\d{2}$'
+     and m->>'date' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
      and (((m->>'date')||' '||coalesce(nullif(m->>'time',''),'00:00'))::timestamp at time zone 'Europe/Madrid')>now()
      and not exists(select 1 from private.availability v where v.match_key=m->>'key' and v.player_id=a.player_id)
   loop
