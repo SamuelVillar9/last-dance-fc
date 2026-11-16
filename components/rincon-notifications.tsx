@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import {AttendancePushPanel} from './attendance-push-panel';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {Bell,Settings,X} from 'lucide-react';
 import {browserDb} from '@/lib/browser-db';
@@ -84,6 +85,7 @@ export function RinconNotifications(){
  <div className="notices-heading"><h2 id="notices-title">{panel==='tutorial'?'QUE NO SE TE ESCAPE EL SALSEO.':panel==='settings'?'NOTIFICACIONES.':'TUS AVISOS.'}</h2><button type="button" className="theme-toggle" aria-label="Cerrar" disabled={busy} onClick={later}><X size={20}/></button></div>
  {panel==='notices'?<>
   <div className="team-actions"><button type="button" className="chip" onClick={()=>{setMessage('');setPanel('settings')}}><Settings size={16}/> Ajustes</button><button type="button" className="chip" disabled={busy||!data.unread} onClick={()=>void run(()=>action('read'))}>Marcar todos como leídos</button></div>
+  <AttendancePushPanel mode="notices"/>
   {!data.items.length&&<p className="muted">Cuando un compañero te mencione, aparecerá aquí.</p>}
   <ul className="notices-list">{data.items.map(n=><li key={n.id} className={n.read_at?'':'notice-unread'}><Link href={'/partidos/'+encodeURIComponent(n.match_key)+'?jugador='+encodeURIComponent(n.target_player_id)+'&aviso='+n.id+'&comentario='+n.comment_id+'#comentario-'+n.comment_id} onClick={()=>{void action('read',{id:n.id}).catch(()=>{});later()}}><b>{n.author_name} te ha mencionado</b><span>En El rincón de rajar · {new Date(n.created_at).toLocaleDateString('es-ES')}</span></Link></li>)}</ul>
  </>:<>
@@ -98,6 +100,7 @@ export function RinconNotifications(){
   {active&&<><button type="button" className="action secondary" disabled={busy} onClick={()=>void run(async()=>{await post({action:'test',endpoint});setMessage('Prueba aceptada por el servicio push. Comprueba el centro de notificaciones. Si no aparece, revisa los ajustes del dispositivo.')})}>Enviar prueba</button><button type="button" className="action secondary" disabled={busy} onClick={()=>void run(async()=>{await action('unsubscribe',{endpoint});setMessage('Avisos desactivados en este dispositivo.')})}>Desactivar este dispositivo</button></>}</div>
   <label className="push-preference"><input type="checkbox" checked={data.mentions_push} disabled={busy} onChange={event=>void run(()=>action('settings',{mentions_push:event.target.checked}))}/> Recibir push de menciones en mis dispositivos activados</label>
   <label className="push-preference"><input type="checkbox" checked={livePush} disabled={busy} onChange={event=>void run(async()=>{if(!db)throw Error('Inicia sesión');const {error}=await db.rpc('live_push_preference',{p_enabled:event.target.checked});if(error)throw error;setLivePush(event.target.checked)})}/> Recibir avisos de los acontecimientos del partido en directo (aunque no esté convocado)</label><p className="muted">Los avisos del directo requieren tener activadas las notificaciones en este dispositivo. Puedes desactivarlos sin dejar de recibir menciones.</p>
+  <AttendancePushPanel mode="settings"/>
   {panel==='tutorial'&&<div className="team-actions"><button type="button" className="action secondary" disabled={busy} onClick={later}>Ahora no</button><button type="button" className="action secondary" disabled={busy} onClick={()=>void run(async()=>{await action('settings',{tutorial_dismissed:true});later()})}>No mostrar de nuevo</button></div>}
  </>}
  {message&&<p role="status" className="admin-message">{message}</p>}
