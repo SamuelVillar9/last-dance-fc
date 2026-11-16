@@ -38,6 +38,7 @@ export function RinconNotifications(){
   const {data,error}=await db.rpc('rincon_notices',{p_payload:{endpoint}});
   if(account.current!==owner||error||!data||typeof data!=='object'||!('items' in data)||!Array.isArray(data.items))return;
   setData(data as unknown as Notices);
+  void db.rpc('attendance_notices',{p_action:'list'}).then(({data:attendance})=>{if(account.current===owner&&attendance&&typeof attendance==='object'&&'unread' in attendance)setAttendanceUnread(Number(attendance.unread)||0)});
   void db.rpc('live_my_permissions').then(({data:pref})=>{if(account.current===owner&&pref&&typeof pref==='object'&&'live_push' in pref)setLivePush(!!pref.live_push)});
  },[db,uid,endpoint]);
  useEffect(()=>{
