@@ -16,7 +16,9 @@ begin
   coalesce(m->>'venue',m->>'court','') venue,m->>'status' status
   from public.league_snapshots l cross join lateral jsonb_array_elements(l.data->'matches') m
   where (m->>'home'='LAST DANCE' or m->>'away'='LAST DANCE')
-   and m->>'date' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2} m->>'key'
+   and m->>'date' ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+   and (m->>'date')::date <= (now() at time zone 'Europe/Madrid')::date+7
+  order by m->>'key'
  loop
   select * into old from private.attendance_fixture_state where match_key=f.mk;
   kind:=null;
