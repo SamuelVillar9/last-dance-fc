@@ -156,9 +156,10 @@ test('home countdown updates to the requested match-day message at Madrid kickof
  await page.clock.setFixedTime(new Date(kickoff-2000));
  await expect(countdown).toBeVisible();
  await page.screenshot({path:'/tmp/lastdance-countdown-mobile.png',fullPage:true});
- // setFixedTime changes Date.now but does not fire setInterval. runFor advances
- // the mocked clock AND executes the countdown's one-second timer.
- await page.clock.runFor(3000);
+ // setFixedTime updates Date.now without advancing timers. The component
+ // deliberately refreshes on visibilitychange, so exercise that real handler.
+ await page.clock.setFixedTime(new Date(kickoff+1000));
+ await page.evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));
  await expect(page.getByText('¡DÍA DE PARTIDO!',{exact:true})).toBeVisible();
  await expect(page.getByRole('timer')).toHaveCount(0);
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
