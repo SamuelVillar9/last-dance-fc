@@ -49,6 +49,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -c "create role service_role nologin;"
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/20261030123937_rincon_interactions.sql
           psql -v ON_ERROR_STOP=1 -c "create function auth.jwt() returns jsonb language sql stable as \$\$ select jsonb_build_object('role',current_setting('request.jwt.claim.role',true)) \$\$;"
+          psql -v ON_ERROR_STOP=1 -c "create function auth.role() returns text language sql stable as \$\$ select current_setting('request.jwt.claim.role',true) \$\$;"
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611170002_mvp_push.sql
           psql -v ON_ERROR_STOP=1 -f tests/mvp-push.sql
           psql -v ON_ERROR_STOP=1 -f supabase/migrations/202611070001_live_match_foundation.sql
