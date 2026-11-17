@@ -3,6 +3,8 @@ create table private.mvp_push_rounds(
  match_key text primary key references private.mvp_rounds(match_key) on delete cascade,
  notified_at timestamptz not null default now()
 );
+-- Do not send retroactive notifications for voting rounds already closed before activation.
+insert into private.mvp_push_rounds(match_key) select match_key from private.mvp_rounds where closes_at<=now() on conflict do nothing;
 create table private.mvp_push_outbox(
  id uuid primary key default gen_random_uuid(),
  match_key text not null references private.mvp_rounds(match_key) on delete cascade,
