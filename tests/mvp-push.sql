@@ -9,7 +9,7 @@ insert into private.push_subscriptions(user_id,endpoint,p256dh,auth) values('000
 insert into private.mvp_votes(match_key,voter_id,candidate_id) values('mvp:test','player-1','player-2');
 update private.mvp_rounds set closes_at=now()-interval '1 minute' where match_key='mvp:test';
 set local role anon;
-select test.mvp_assert((select count(*)=0 from private.mvp_push_outbox),'private outbox not readable by anon');
+do $begin begin perform count(*) from private.mvp_push_outbox; raise exception 'Private outbox exposed'; exception when insufficient_privilege then null;end;end$;
 reset role;
 select set_config('request.jwt.claim.role','service_role',true);
 select public.mvp_push_dispatch('prepare');
